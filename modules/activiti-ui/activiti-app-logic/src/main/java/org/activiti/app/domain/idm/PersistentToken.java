@@ -48,6 +48,7 @@ public class PersistentToken implements Serializable {
   private static final DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("d MMMM yyyy");
 
   @Id
+  @Column(name = "series")
   private String series;
 
   @JsonIgnore

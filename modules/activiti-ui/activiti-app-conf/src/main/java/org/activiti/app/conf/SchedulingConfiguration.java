@@ -24,7 +24,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-@Configuration
+/*@Configuration
 @EnableScheduling
 public class SchedulingConfiguration implements SchedulingConfigurer {
 
@@ -41,4 +41,4 @@ public class SchedulingConfiguration implements SchedulingConfigurer {
     	return scheduledExecutorService;
     }
 
-}
+}*/

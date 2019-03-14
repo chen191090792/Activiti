@@ -96,7 +96,7 @@ public class AppDefinitionServiceImpl implements AppDefinitionService {
     }
 
     for (ModelHistory model : modelMap.values()) {
-      Model latestModel = modelRepository.findOne(model.getModelId());
+      Model latestModel = modelRepository.getOne(model.getModelId());
       if (latestModel != null) {
         resultList.add(createAppDefinition(model));
       }

@@ -146,7 +146,7 @@ public class RelatedContentService {
     }
 
     public RelatedContent getRelatedContent(Long id, boolean includeOwner) {
-        RelatedContent content = contentRepository.findOne(id);
+        RelatedContent content = contentRepository.getOne(id);
         
         if (content != null && includeOwner) {
             // Touch related entities
@@ -242,7 +242,7 @@ public class RelatedContentService {
         
         ContentObject updatedContent = contentStorage.updateContentObject(contentStoreId, contentStream, lengthHint);
         
-        RelatedContent relatedContent = contentRepository.findOne(relatedContentId);
+        RelatedContent relatedContent = contentRepository.getOne(relatedContentId);
         relatedContent.setLastModifiedBy(user.getId());
         relatedContent.setLastModified(timestamp);
         relatedContent.setContentSize(lengthHint);
@@ -252,7 +252,7 @@ public class RelatedContentService {
 
     @Transactional
     public void updateName(Long relatedContentId, String newName) {
-        RelatedContent relatedContent = contentRepository.findOne(relatedContentId);
+        RelatedContent relatedContent = contentRepository.getOne(relatedContentId);
         relatedContent.setName(newName);
         contentRepository.save(relatedContent);
     }
@@ -263,7 +263,7 @@ public class RelatedContentService {
      */
     @Transactional
     public void setContentField(Long relatedContentId, String field, String processInstanceId, String taskId) {
-        final RelatedContent relatedContent = contentRepository.findOne(relatedContentId);
+        final RelatedContent relatedContent = contentRepository.getOne(relatedContentId);
         relatedContent.setProcessInstanceId(processInstanceId);
         relatedContent.setTaskId(taskId);
         relatedContent.setRelatedContent(false);

@@ -1,3 +1,4 @@
+/*
 package org.activiti.test.spring.boot;
 
 import java.io.IOException;
@@ -24,9 +25,11 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
+*/
 /**
  * @author Josh Long
- */
+ *//*
+
 public class RestApiAutoConfigurationTest {
 
   @Configuration
@@ -54,7 +57,8 @@ public class RestApiAutoConfigurationTest {
     }
   }
 
-  /*   @Configuration
+  */
+/*   @Configuration
      @Import({EmbeddedServletContainerAutoConfiguration.class,
              DispatcherServletAutoConfiguration.class,
              ServerPropertiesAutoConfiguration.class,
@@ -71,7 +75,8 @@ public class RestApiAutoConfigurationTest {
              return new RestTemplate();
          }
      }
- */
+ *//*
+
   @After
   public void close() {
     if (this.context != null) {
@@ -112,3 +117,4 @@ public class RestApiAutoConfigurationTest {
     org.junit.Assert.assertTrue(received401.get());
   }
 }
+*/

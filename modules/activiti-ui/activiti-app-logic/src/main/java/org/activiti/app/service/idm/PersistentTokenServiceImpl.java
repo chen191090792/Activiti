@@ -73,7 +73,7 @@ public class PersistentTokenServiceImpl implements PersistentTokenService {
         .build(new CacheLoader<String, PersistentToken>() {
 
           public PersistentToken load(final String tokenId) throws Exception {
-            PersistentToken persistentToken = persistentTokenRepository.findOne(tokenId);
+            PersistentToken persistentToken = persistentTokenRepository.getOne(tokenId);
             if (persistentToken != null) {
               return persistentToken;
             } else {

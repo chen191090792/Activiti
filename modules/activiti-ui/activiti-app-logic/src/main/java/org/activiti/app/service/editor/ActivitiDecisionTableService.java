@@ -113,7 +113,7 @@ public class ActivitiDecisionTableService extends BaseActivitiModelService {
 
   public void exportHistoricDecisionTable(HttpServletResponse response, String modelHistoryId) {
     // Get the historic model
-    ModelHistory modelHistory = modelHistoryRepository.findOne(modelHistoryId);
+    ModelHistory modelHistory = modelHistoryRepository.getOne(modelHistoryId);
 
     // Load model and check we have read rights
     getModel(modelHistory.getModelId(), true, false);
@@ -224,7 +224,7 @@ public class ActivitiDecisionTableService extends BaseActivitiModelService {
 
   public DecisionTableRepresentation getHistoricDecisionTable(String modelHistoryId) {
     // Get the historic model
-    ModelHistory modelHistory = modelHistoryRepository.findOne(modelHistoryId);
+    ModelHistory modelHistory = modelHistoryRepository.getOne(modelHistoryId);
 
     // Load model and check we have read rights
     getModel(modelHistory.getModelId(), true, false);

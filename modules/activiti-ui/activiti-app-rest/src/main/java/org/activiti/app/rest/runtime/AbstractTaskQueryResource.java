@@ -12,6 +12,8 @@
  */
 package org.activiti.app.rest.runtime;
 
+import java.text.ParseException;
+import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -217,13 +219,23 @@ public abstract class AbstractTaskQueryResource {
 
   private void handleDueBefore(TaskInfoQueryWrapper taskInfoQueryWrapper, JsonNode dueBeforeNode) {
     String date = dueBeforeNode.asText();
-    Date d = ISO8601Utils.parse(date);
+    Date d = null;
+    try {
+      d = ISO8601Utils.parse(date,new ParsePosition(0));
+    } catch (ParseException e) {
+      e.printStackTrace();
+    }
     taskInfoQueryWrapper.getTaskInfoQuery().taskDueBefore(d);
   }
 
   private void handleDueAfter(TaskInfoQueryWrapper taskInfoQueryWrapper, JsonNode dueAfterNode) {
     String date = dueAfterNode.asText();
-    Date d = ISO8601Utils.parse(date);
+    Date d = null;
+    try {
+      d = ISO8601Utils.parse(date,new ParsePosition(0));
+    } catch (ParseException e) {
+      e.printStackTrace();
+    }
     taskInfoQueryWrapper.getTaskInfoQuery().taskDueAfter(d);
   }
 

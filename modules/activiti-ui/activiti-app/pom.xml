@@ -6,16 +6,37 @@
     <parent>
         <groupId>org.activiti</groupId>
         <artifactId>activiti-ui-root</artifactId>
-        <version>6.0.0</version>
+        <version>6.0.0-boot2</version>
     </parent>
     <artifactId>activiti-app</artifactId>
     <packaging>war</packaging>
 
     <dependencies>
-    
+        <dependency>
+            <groupId>org.activiti</groupId>
+            <artifactId>activiti-spring-boot-starter-basic</artifactId>
+            <version>6.0.0-boot2</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>slf4j-log4j12</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>2.0.0.RELEASE</version>
+        </dependency>
     	<dependency>
             <groupId>org.activiti</groupId>
             <artifactId>activiti-app-conf</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>slf4j-log4j12</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
 		<dependency>
@@ -27,6 +48,16 @@
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <version>2.0.0.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-hateoas</artifactId>
+            <version>2.0.0.RELEASE</version>
+        </dependency>
     </dependencies>
 
     <!-- BUILD -->
@@ -65,7 +96,11 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.5</version>
             </plugin>
-
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.0.0.RELEASE</version>
+            </plugin>
             <plugin>
                 <groupId>org.apache.tomcat.maven</groupId>
                 <artifactId>tomcat7-maven-plugin</artifactId>
