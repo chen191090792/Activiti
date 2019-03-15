@@ -28,7 +28,6 @@ import java.util.EnumSet;
  */
 @SpringBootApplication(exclude = {
         SecurityAutoConfiguration.class,
-        /*HibernateJpaAutoConfiguration.class,*/
         org.activiti.spring.boot.SecurityAutoConfiguration.class
 })
 @Import({ApplicationConfiguration.class})
