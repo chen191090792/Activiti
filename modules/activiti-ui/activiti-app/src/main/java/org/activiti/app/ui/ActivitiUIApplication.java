@@ -39,6 +39,7 @@ public class ActivitiUIApplication extends SpringBootServletInitializer {
 
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+        System.out.println("123123123");
         return builder.sources(ActivitiUIApplication.class);
     }
 
