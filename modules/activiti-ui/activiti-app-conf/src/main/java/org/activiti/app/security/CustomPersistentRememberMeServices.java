@@ -15,6 +15,8 @@ package org.activiti.app.security;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -39,6 +41,8 @@ import org.springframework.security.web.authentication.rememberme.RememberMeAuth
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ReflectionUtils;
+import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.JedisCluster;
 
 /**
  * Custom implementation of Spring Security's RememberMeServices.
@@ -215,7 +219,8 @@ public class CustomPersistentRememberMeServices extends AbstractRememberMeServic
   }
 
   private void addCookie(PersistentToken token, HttpServletRequest request, HttpServletResponse response) {
-    setCookie(new String[] { token.getSeries(), token.getTokenValue() }, tokenMaxAgeInSeconds, request, response);
+    /*setCookie(new String[] { token.getSeries(), token.getTokenValue() }, tokenMaxAgeInSeconds, request, response);*/
+    setCookie(token,new String[] { token.getSeries(), token.getTokenValue() }, tokenMaxAgeInSeconds, request, response);
   }
 
   @Override
@@ -233,7 +238,49 @@ public class CustomPersistentRememberMeServices extends AbstractRememberMeServic
     } else if (logger.isDebugEnabled()) {
       logger.debug("Note: Cookie will not be marked as HttpOnly because you are not using Servlet 3.0 (Cookie#setHttpOnly(boolean) was not found).");
     }
+    Set<HostAndPort> nodes = new HashSet<HostAndPort>();
+    nodes.add(new HostAndPort("172.16.0.19", 7000));
+    nodes.add(new HostAndPort("172.16.0.19", 7001));
+    nodes.add(new HostAndPort("172.16.0.19", 7002));
+    nodes.add(new HostAndPort("172.16.0.20", 7003));
+    nodes.add(new HostAndPort("172.16.0.20", 7004));
+    nodes.add(new HostAndPort("172.16.0.20", 7005));
+    JedisCluster jedis = new JedisCluster(nodes);
+    jedis.set(COOKIE_NAME,cookieValue);
+    response.addCookie(cookie);
+  }
 
+  /**
+   * 2019-03-26 cxh 修改
+   * @param token
+   * @param tokens
+   * @param maxAge
+   * @param request
+   * @param response
+   */
+  protected void setCookie(PersistentToken token,String[] tokens, int maxAge, HttpServletRequest request, HttpServletResponse response) {
+    String cookieValue = encodeCookie(tokens);
+    Cookie cookie = new Cookie(getCookieName(), cookieValue);
+    cookie.setMaxAge(maxAge);
+    cookie.setPath("/");
+
+    cookie.setSecure(request.isSecure());
+
+    Method setHttpOnlyMethod = ReflectionUtils.findMethod(Cookie.class, "setHttpOnly", boolean.class);
+    if (setHttpOnlyMethod != null) {
+      ReflectionUtils.invokeMethod(setHttpOnlyMethod, cookie, Boolean.TRUE);
+    } else if (logger.isDebugEnabled()) {
+      logger.debug("Note: Cookie will not be marked as HttpOnly because you are not using Servlet 3.0 (Cookie#setHttpOnly(boolean) was not found).");
+    }
+    Set<HostAndPort> nodes = new HashSet<HostAndPort>();
+    nodes.add(new HostAndPort("172.16.0.19", 7000));
+    nodes.add(new HostAndPort("172.16.0.19", 7001));
+    nodes.add(new HostAndPort("172.16.0.19", 7002));
+    nodes.add(new HostAndPort("172.16.0.20", 7003));
+    nodes.add(new HostAndPort("172.16.0.20", 7004));
+    nodes.add(new HostAndPort("172.16.0.20", 7005));
+    JedisCluster jedis = new JedisCluster(nodes);
+    jedis.set(COOKIE_NAME+"_"+token.getUser(),cookieValue);
     response.addCookie(cookie);
   }
 
