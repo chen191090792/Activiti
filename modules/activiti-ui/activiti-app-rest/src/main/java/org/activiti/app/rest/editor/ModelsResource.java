@@ -23,9 +23,11 @@ import org.activiti.app.model.common.ResultListDataRepresentation;
 import org.activiti.app.model.editor.ModelKeyRepresentation;
 import org.activiti.app.model.editor.ModelRepresentation;
 import org.activiti.app.model.editor.decisiontable.DecisionTableDefinitionRepresentation;
+import org.activiti.app.rest.utils.JedisUtils;
 import org.activiti.app.security.SecurityUtils;
 import org.activiti.app.service.exception.BadRequestException;
 import org.activiti.app.service.exception.InternalServerErrorException;
+import org.activiti.engine.delegate.event.ActivitiEvent;
 import org.activiti.form.model.FormDefinition;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -41,6 +43,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import redis.clients.jedis.JedisCluster;
 
 @RestController
 public class ModelsResource extends AbstractModelsResource {
@@ -161,6 +164,8 @@ public class ModelsResource extends AbstractModelsResource {
     }
 
     Model newModel = modelService.createModel(modelRepresentation, json, SecurityUtils.getCurrentUserObject());
+    JedisCluster jedisCluser = JedisUtils.getJedisCluser();
+    jedisCluser.set(newModel.getKey(),newModel.getModelEditorJson());
     return new ModelRepresentation(newModel);
   }
 
@@ -302,7 +307,6 @@ public class ModelsResource extends AbstractModelsResource {
       if (stepNode.has("steps")) {
         internalDeleteNodeByNameFromStepModel(stepNode.get("steps"), propertyName);
       }
-
       // Overdue steps
       if (stepNode.has("overdueSteps")) {
         internalDeleteNodeByNameFromStepModel(stepNode.get("overdueSteps"), propertyName);

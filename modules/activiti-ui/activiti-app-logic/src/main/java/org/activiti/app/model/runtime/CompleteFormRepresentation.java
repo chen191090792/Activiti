@@ -23,6 +23,7 @@ public class CompleteFormRepresentation {
   protected String formId;
   protected Map<String, Object> values;
   protected String outcome;
+  private String assignment;
   
 	public String getFormId() {
     return formId;
@@ -47,5 +48,12 @@ public class CompleteFormRepresentation {
 	public void setOutcome(String outcome) {
 		this.outcome = outcome;
 	}
-	
+
+	public String getAssignment() {
+		return assignment;
+	}
+
+	public void setAssignment(String assignment) {
+		this.assignment = assignment;
+	}
 }

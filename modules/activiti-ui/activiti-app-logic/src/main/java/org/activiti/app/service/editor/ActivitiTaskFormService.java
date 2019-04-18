@@ -32,6 +32,7 @@ import org.activiti.engine.history.HistoricVariableInstance;
 import org.activiti.engine.identity.User;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.task.Task;
+import org.activiti.engine.task.TaskQuery;
 import org.activiti.form.api.FormRepositoryService;
 import org.activiti.form.api.FormService;
 import org.activiti.form.model.FormDefinition;
@@ -119,11 +120,9 @@ public class ActivitiTaskFormService {
 
     // Get the form definition
     Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
-
     if (task == null) {
       throw new NotFoundException("Task not found with id: " + taskId);
     }
-    
     FormDefinition formDefinition = formRepositoryService.getFormDefinitionById(completeTaskFormRepresentation.getFormId());
 
     User currentUser = SecurityUtils.getCurrentUserObject();
@@ -137,9 +136,7 @@ public class ActivitiTaskFormService {
     // Extract raw variables and complete the task
     Map<String, Object> variables = formService.getVariablesFromFormSubmission(formDefinition, completeTaskFormRepresentation.getValues(),
         completeTaskFormRepresentation.getOutcome());
-
     formService.storeSubmittedForm(variables, formDefinition, task.getId(), task.getProcessInstanceId());
-    
     taskService.complete(taskId, variables);
   }
   
@@ -159,5 +156,12 @@ public class ActivitiTaskFormService {
     List<ProcessInstanceVariableRepresentation> processInstanceVariableRepresenations = 
         new ArrayList<ProcessInstanceVariableRepresentation>(processInstanceVariables.values());
     return processInstanceVariableRepresenations;
+  }
+
+  public void changeAssignee(String executionId,String processId,String assignment) {
+    Task task = taskService.createTaskQuery().executionId(executionId).processInstanceId(processId).singleResult();
+    if(task!=null && StringUtils.isNotEmpty(assignment)){
+      taskService.setAssignee(task.getId(),assignment);
+    }
   }
 }

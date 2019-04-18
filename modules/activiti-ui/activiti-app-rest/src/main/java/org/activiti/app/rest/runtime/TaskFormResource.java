@@ -17,6 +17,9 @@ import java.util.List;
 import org.activiti.app.model.runtime.CompleteFormRepresentation;
 import org.activiti.app.model.runtime.ProcessInstanceVariableRepresentation;
 import org.activiti.app.service.editor.ActivitiTaskFormService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.task.Task;
+import org.activiti.engine.task.TaskQuery;
 import org.activiti.form.model.FormDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,6 +39,8 @@ public class TaskFormResource {
   
   @Autowired
   protected ActivitiTaskFormService taskFormService;
+  @Autowired
+  private TaskService taskService;
 
   @RequestMapping(value = "/{taskId}", method = RequestMethod.GET, produces = "application/json")
   public FormDefinition getTaskForm(@PathVariable String taskId) {
@@ -45,11 +50,16 @@ public class TaskFormResource {
   @ResponseStatus(value = HttpStatus.OK)
   @RequestMapping(value = "/{taskId}", method = RequestMethod.POST, produces = "application/json")
   public void completeTaskForm(@PathVariable String taskId, @RequestBody CompleteFormRepresentation completeTaskFormRepresentation) {
+    Task task = (Task)((TaskQuery)this.taskService.createTaskQuery().taskId(taskId)).singleResult();
     taskFormService.completeTaskForm(taskId, completeTaskFormRepresentation);
+    taskFormService.changeAssignee(task.getExecutionId(),task.getProcessInstanceId(),completeTaskFormRepresentation.getAssignment());
   }
 
   @RequestMapping(value = "/{taskId}/variables", method = RequestMethod.GET, produces = "application/json")
   public List<ProcessInstanceVariableRepresentation> getProcessInstanceVariables(@PathVariable String taskId) {
     return taskFormService.getProcessInstanceVariables(taskId);
   }
+
+
+
 }

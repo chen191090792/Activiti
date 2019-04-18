@@ -12,33 +12,34 @@
  */
 package org.activiti.app.rest.runtime;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.google.common.collect.Lists;
+import org.activiti.app.domain.editor.Model;
 import org.activiti.app.domain.runtime.RelatedContent;
 import org.activiti.app.model.component.SimpleContentTypeMapper;
 import org.activiti.app.model.runtime.CreateProcessInstanceRepresentation;
 import org.activiti.app.model.runtime.ProcessInstanceRepresentation;
 import org.activiti.app.model.runtime.RelatedContentRepresentation;
+import org.activiti.app.rest.utils.JedisUtils;
+import org.activiti.app.service.api.ModelService;
 import org.activiti.app.service.api.UserCache;
 import org.activiti.app.service.api.UserCache.CachedUser;
 import org.activiti.app.service.exception.BadRequestException;
 import org.activiti.app.service.runtime.ActivitiService;
 import org.activiti.app.service.runtime.PermissionService;
 import org.activiti.app.service.runtime.RelatedContentService;
-import org.activiti.bpmn.model.BpmnModel;
-import org.activiti.bpmn.model.FlowElement;
+import org.activiti.bpmn.model.*;
 import org.activiti.bpmn.model.Process;
-import org.activiti.bpmn.model.StartEvent;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
+import org.activiti.engine.TaskService;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.identity.User;
 import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
 import org.activiti.form.api.FormRepositoryService;
 import org.activiti.form.api.FormService;
 import org.activiti.form.model.FormDefinition;
@@ -47,6 +48,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.JedisCluster;
 
 public abstract class AbstractProcessInstancesResource {
 
@@ -79,6 +82,10 @@ public abstract class AbstractProcessInstancesResource {
 
   @Autowired
   protected ObjectMapper objectMapper;
+  @Autowired
+  private TaskService taskService;
+  @Autowired
+  private ModelService modelService;
 
   public ProcessInstanceRepresentation startNewProcessInstance(CreateProcessInstanceRepresentation startRequest) {
     if (StringUtils.isEmpty(startRequest.getProcessDefinitionId())) {
@@ -89,7 +96,6 @@ public abstract class AbstractProcessInstancesResource {
     Map<String, Object> variables = null;
 
     ProcessDefinition processDefinition = permissionService.getProcessDefinitionById(startRequest.getProcessDefinitionId());
-
     if (startRequest.getValues() != null || startRequest.getOutcome() != null) {
       BpmnModel bpmnModel = repositoryService.getBpmnModel(processDefinition.getId());
       Process process = bpmnModel.getProcessById(processDefinition.getKey());
@@ -103,7 +109,17 @@ public abstract class AbstractProcessInstancesResource {
           }
         }
       }
+     /* Collection<FlowElement> flowElements = process.getFlowElements();
+      for (FlowElement flowElement :flowElements) {
+        if(flowElement instanceof UserTask){
+          UserTask userTask = (UserTask)flowElement;
+          List<String> list = Lists.newArrayList();
+          list.add("13543452355");
+          userTask.setCandidateUsers(list);
+        }
+      }*/
     }
+
     
     ProcessInstance processInstance = activitiService.startProcessInstance(startRequest.getProcessDefinitionId(), variables, startRequest.getName());
 
@@ -156,5 +172,18 @@ public abstract class AbstractProcessInstancesResource {
   protected RelatedContentRepresentation createRelatedContentResponse(RelatedContent relatedContent) {
     RelatedContentRepresentation relatedContentResponse = new RelatedContentRepresentation(relatedContent, typeMapper);
     return relatedContentResponse;
+  }
+
+
+  public void changeAssignee(String processInstanceId,String assignment){
+    Task task = taskService.createTaskQuery().processInstanceId(processInstanceId).singleResult();
+    if(task!=null){
+      taskService.setAssignee(task.getId(),assignment);
+    }
+    /*JedisCluster jedisCluser = JedisUtils.getJedisCluser();
+    String modelId = jedisCluser.get(processInstanceKey);
+    Model model = modelService.getModel(modelId);
+    System.out.println(model.getModelEditorJson());*/
+
   }
 }

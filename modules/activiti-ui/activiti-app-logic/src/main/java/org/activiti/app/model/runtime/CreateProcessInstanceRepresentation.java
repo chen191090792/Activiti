@@ -15,7 +15,8 @@ package org.activiti.app.model.runtime;
 public class CreateProcessInstanceRepresentation extends CompleteFormRepresentation {
     private String processDefinitionId;
     private String name;
-    
+    private String assignment;
+
     public void setName(String name) {
         this.name = name;
     }
@@ -30,4 +31,11 @@ public class CreateProcessInstanceRepresentation extends CompleteFormRepresentat
         return processDefinitionId;
     }
 
+    public String getAssignment() {
+        return assignment;
+    }
+
+    public void setAssignment(String assignment) {
+        this.assignment = assignment;
+    }
 }

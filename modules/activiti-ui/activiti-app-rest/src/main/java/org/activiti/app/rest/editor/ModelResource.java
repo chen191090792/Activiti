@@ -14,11 +14,17 @@ package org.activiti.app.rest.editor;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.common.collect.Lists;
 import org.activiti.app.domain.editor.Model;
 import org.activiti.app.model.editor.ModelKeyRepresentation;
 import org.activiti.app.model.editor.ModelRepresentation;
 import org.activiti.app.repository.editor.ModelRepository;
+import org.activiti.app.rest.entity.ChildShapesEntity;
+import org.activiti.app.rest.utils.JedisUtils;
 import org.activiti.app.security.SecurityUtils;
 import org.activiti.app.service.api.ModelService;
 import org.activiti.app.service.exception.BadRequestException;
@@ -27,6 +33,7 @@ import org.activiti.app.service.exception.InternalServerErrorException;
 import org.activiti.bpmn.converter.BpmnXMLConverter;
 import org.activiti.editor.language.json.converter.BpmnJsonConverter;
 import org.activiti.engine.identity.User;
+import org.activiti.engine.impl.util.json.JSONArray;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +52,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import redis.clients.jedis.JedisCluster;
 
 @RestController
 public class ModelResource extends AbstractModelResource {
@@ -91,7 +99,6 @@ public class ModelResource extends AbstractModelResource {
   public ModelRepresentation updateModel(@PathVariable String modelId, @RequestBody ModelRepresentation updatedModel) {
     // Get model, write-permission required if not a favorite-update
     Model model = modelService.getModel(modelId);
-    
     ModelKeyRepresentation modelKeyInfo = modelService.validateModelKey(model, model.getModelType(), updatedModel.getKey());
     if (modelKeyInfo.isKeyAlreadyExists()) {
       throw new BadRequestException("Model with provided key already exists " + updatedModel.getKey());
@@ -265,6 +272,8 @@ public class ModelResource extends AbstractModelResource {
     try {
       model = modelService.saveModel(model.getId(), name, key, description, json, newVersion, 
           newVersionComment, SecurityUtils.getCurrentUserObject());
+      JedisCluster jedisCluser = JedisUtils.getJedisCluser();
+      jedisCluser.set(model.getKey(),model.getModelEditorJson());
       return new ModelRepresentation(model);
       
     } catch (Exception e) {
@@ -279,6 +288,43 @@ public class ModelResource extends AbstractModelResource {
     model.setDescription(description);
     model.setModelType(modelType);
     Model newModel = modelService.createModel(model, editorJson, SecurityUtils.getCurrentUserObject());
+    JedisCluster jedisCluser = JedisUtils.getJedisCluser();
+    jedisCluser.set(newModel.getKey(),newModel.getModelEditorJson());
     return new ModelRepresentation(newModel);
   }
+
+
+  /**
+   * GET /rest/models/{modelId}/editor/json -> get the JSON model
+   */
+  @RequestMapping(value = "/rest/models/{modelId}/childshapes/json", method = RequestMethod.GET, produces = "application/json")
+  public ChildShapesEntity getChildShapesJSON(@PathVariable String modelId) {
+    Model model = modelService.getModel(modelId);
+    ChildShapesEntity entity = new ChildShapesEntity();
+    entity.setModelId(model.getId());
+    if (StringUtils.isNotEmpty(model.getModelEditorJson())) {
+      try {
+        ObjectNode editorJsonNode = (ObjectNode) objectMapper.readTree(model.getModelEditorJson());
+        JsonNode childShapes = editorJsonNode.get("childShapes");
+        List<JsonNode> properties = Lists.newArrayList();
+        if(childShapes.isArray()){
+          for(int i=0;i<childShapes.size();i++){
+            JsonNode node = childShapes.get(i);
+            JsonNode stencil = node.get("stencil").get("id");
+            if(!StringUtils.equals("SequenceFlow",stencil.asText()) && !StringUtils.equals("StartNoneEvent",stencil.asText())){
+                properties.add(node.get("properties"));
+            }
+          }
+        }
+          entity.setProperties(properties);
+      } catch (Exception e) {
+        log.error("Error reading editor json " + modelId, e);
+        throw new InternalServerErrorException("Error reading editor json " + modelId);
+      }
+    }
+    return entity;
+  }
+
+
+
 }
