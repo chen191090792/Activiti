@@ -21,7 +21,6 @@ import org.activiti.app.model.component.SimpleContentTypeMapper;
 import org.activiti.app.model.runtime.CreateProcessInstanceRepresentation;
 import org.activiti.app.model.runtime.ProcessInstanceRepresentation;
 import org.activiti.app.model.runtime.RelatedContentRepresentation;
-import org.activiti.app.rest.utils.JedisUtils;
 import org.activiti.app.service.api.ModelService;
 import org.activiti.app.service.api.UserCache;
 import org.activiti.app.service.api.UserCache.CachedUser;

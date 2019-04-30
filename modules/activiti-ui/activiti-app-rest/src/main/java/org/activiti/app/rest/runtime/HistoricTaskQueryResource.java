@@ -12,8 +12,7 @@
  */
 package org.activiti.app.rest.runtime;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +24,7 @@ import org.activiti.app.model.common.ResultListDataRepresentation;
 import org.activiti.app.model.idm.UserRepresentation;
 import org.activiti.app.model.runtime.TaskRepresentation;
 import org.activiti.app.rest.entity.CustomProcessDiagramGenerator;
+import org.activiti.app.rest.utils.JedisUtils;
 import org.activiti.app.security.SecurityUtils;
 import org.activiti.app.service.api.UserCache;
 import org.activiti.app.service.api.UserCache.CachedUser;
@@ -52,6 +52,10 @@ import org.springframework.web.bind.annotation.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import redis.clients.jedis.JedisCluster;
+import sun.misc.BASE64Encoder;
+
+import static org.apache.commons.io.IOUtils.copyLarge;
 
 @RestController
 public class HistoricTaskQueryResource {
@@ -70,6 +74,8 @@ public class HistoricTaskQueryResource {
   private RepositoryService repositoryService;
 
   private Logger logger = LoggerFactory.getLogger(HistoricTaskQueryResource.class);
+
+  private static final String CHARSET_NAME = "UTF-8";
 
   @RequestMapping(value = "/rest/query/history/tasks", method = RequestMethod.POST, produces = "application/json")
   public ResultListDataRepresentation listTasks(@RequestBody ObjectNode requestNode) {
@@ -133,7 +139,7 @@ public class HistoricTaskQueryResource {
    * @param outputStream
    * @return
    */
-  @RequestMapping(value = "/rest/query/history/tasks/{processInstanceId}", method = RequestMethod.GET)
+ /* @RequestMapping(value = "/rest/query/history/tasks/{processInstanceId}", method = RequestMethod.GET)
   public void getFlowImgByInstanceId(@PathVariable String processInstanceId, OutputStream outputStream) {
     try {
       if (StringUtils.isEmpty(processInstanceId)) {
@@ -178,7 +184,7 @@ public class HistoricTaskQueryResource {
       logger.error("processInstanceId" + processInstanceId + "生成流程图失败，原因：" + e.getMessage(), e);
     }
   }
-
+*/
   /**
    * 获取已经流转的线
    *
@@ -254,4 +260,86 @@ public class HistoricTaskQueryResource {
     }
     return highLightedFlowIds;
   }
+
+
+  /**
+   * 根据流程实例Id,获取实时流程图片
+   *
+   * @param processInstanceId
+   * @param
+   * @return
+   */
+  @RequestMapping(value = "/rest/query/history/tasks/{processInstanceId}", method = RequestMethod.GET)
+  public void getFlowImgByInstanceIdInputStream(@PathVariable String processInstanceId) {
+    try {
+      if (StringUtils.isEmpty(processInstanceId)) {
+        return ;
+      }
+      // 获取历史流程实例
+      HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+      // 获取流程中已经执行的节点，按照执行先后顺序排序
+      List<HistoricActivityInstance> historicActivityInstances = historyService.createHistoricActivityInstanceQuery().processInstanceId(processInstanceId)
+              .orderByHistoricActivityInstanceId().asc().list();
+      // 高亮已经执行流程节点ID集合
+      List<String> highLightedActivitiIds = new ArrayList<>();
+      for (HistoricActivityInstance historicActivityInstance : historicActivityInstances) {
+        highLightedActivitiIds.add(historicActivityInstance.getActivityId());
+      }
+
+      List<HistoricProcessInstance> historicFinishedProcessInstances = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).finished()
+              .list();
+      ProcessDiagramGenerator processDiagramGenerator = null;
+      // 如果还没完成，流程图高亮颜色为绿色，如果已经完成为红色
+      if (!CollectionUtils.isEmpty(historicFinishedProcessInstances)) {
+        // 如果不为空，说明已经完成
+        processDiagramGenerator = processEngineConfiguration.getProcessDiagramGenerator();
+      } else {
+        processDiagramGenerator = new CustomProcessDiagramGenerator();
+      }
+
+      BpmnModel bpmnModel = repositoryService.getBpmnModel(historicProcessInstance.getProcessDefinitionId());
+      // 高亮流程已发生流转的线id集合
+      List<String> highLightedFlowIds = getHighLightedFlows(bpmnModel, historicActivityInstances);
+
+      // 使用默认配置获得流程图表生成器，并生成追踪图片字符流
+      InputStream imageStream = processDiagramGenerator.generateDiagram(bpmnModel, "png", highLightedActivitiIds, highLightedFlowIds, "宋体", "微软雅黑", "黑体", null, 2.0);
+      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+      // 输出图片内容
+      byte[] b = new byte[1024];
+      int len;
+      while ((len = imageStream.read(b, 0, 1024)) != -1) {
+        outputStream.write(b, 0, len);
+      }
+      BASE64Encoder encoder = new BASE64Encoder();
+      String imageEncoder = encoder.encode(outputStream.toByteArray());
+      JedisCluster jedisCluser = JedisUtils.getJedisCluser();
+      jedisCluser.set(processInstanceId,imageEncoder);
+    } catch (Exception e) {
+      logger.error("processInstanceId" + processInstanceId + "生成流程图失败，原因：" + e.getMessage(), e);
+    }
+  }
+  public static int copy(InputStream input, OutputStream output)throws IOException{
+    long count = copyLarge(input, output);
+    if (count > 2147483647L) {
+      return -1;
+    }
+    return (int)count;
+  }
+  /**
+   * 转换为字节数组
+   * @param str
+   * @return
+   */
+  public static byte[] getBytes(String str){
+    if (str != null){
+      try {
+        return str.getBytes(CHARSET_NAME);
+      } catch (UnsupportedEncodingException e) {
+        return null;
+      }
+    }else{
+      return null;
+    }
+  }
+
 }
