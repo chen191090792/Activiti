@@ -176,7 +176,7 @@ public abstract class AbstractProcessInstancesResource {
 
   public void changeAssignee(String processInstanceId,String assignment){
     Task task = taskService.createTaskQuery().processInstanceId(processInstanceId).singleResult();
-    if(task!=null){
+    if(task!=null && StringUtils.isNotEmpty(assignment)){
       taskService.setAssignee(task.getId(),assignment);
     }
     /*JedisCluster jedisCluser = JedisUtils.getJedisCluser();

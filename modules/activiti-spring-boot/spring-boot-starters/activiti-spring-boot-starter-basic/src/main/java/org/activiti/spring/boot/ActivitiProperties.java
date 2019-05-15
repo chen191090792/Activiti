@@ -29,12 +29,12 @@ public class ActivitiProperties {
   private boolean asyncExecutorActivate = true;
   private boolean restApiEnabled;
   private String deploymentName;
-  private String mailServerHost = "localhost";
-  private int mailServerPort = 1025;
-  private String mailServerUserName;
-  private String mailServerPassword;
+  private String mailServerHost = "smtp.qq.com";
+  private int mailServerPort = 465;
+  private String mailServerUserName="191090792@qq.com";
+  private String mailServerPassword="godzdpprmvkcbgbc";
   private String mailServerDefaultFrom;
-  private boolean mailServerUseSsl;
+  private boolean mailServerUseSsl=true;
   private boolean mailServerUseTls;
   private String databaseSchemaUpdate = "true";
   private String databaseSchema;
