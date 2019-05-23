@@ -108,15 +108,16 @@ public abstract class AbstractProcessInstancesResource {
           }
         }
       }
-     /* Collection<FlowElement> flowElements = process.getFlowElements();
+      Collection<FlowElement> flowElements = process.getFlowElements();
       for (FlowElement flowElement :flowElements) {
         if(flowElement instanceof UserTask){
           UserTask userTask = (UserTask)flowElement;
-          List<String> list = Lists.newArrayList();
-          list.add("13543452355");
-          userTask.setCandidateUsers(list);
+          if(userTask.getName().equalsIgnoreCase("审批A")){
+            userTask.setAssignee("13543452355");
+          }
+
         }
-      }*/
+      }
     }
 
     
@@ -138,7 +139,6 @@ public abstract class AbstractProcessInstancesResource {
       }*/
 
     HistoricProcessInstance historicProcess = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstance.getId()).singleResult();
-
     if (formDefinition != null) {
       formService.storeSubmittedForm(variables, formDefinition, null, historicProcess.getId());
     }

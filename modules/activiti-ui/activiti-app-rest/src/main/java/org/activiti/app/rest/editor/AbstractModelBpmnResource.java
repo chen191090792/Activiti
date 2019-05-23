@@ -64,6 +64,8 @@ public class AbstractModelBpmnResource {
   protected void generateBpmn20Xml(HttpServletResponse response, AbstractModel model) {
     String name = model.getName().replaceAll(" ", "_");
     response.setHeader("Content-Disposition", "attachment; filename=" + name + ".bpmn20.xml");
+    String modelEditorJson = model.getModelEditorJson();
+    System.out.println(modelEditorJson);
     if (model.getModelEditorJson() != null) {
       try {
         ServletOutputStream servletOutputStream = response.getOutputStream();

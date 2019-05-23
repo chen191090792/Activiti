@@ -299,7 +299,7 @@ public abstract class BaseBpmnJsonConverter implements EditorJsonConstants, Sten
       FlowElement flowElement = (FlowElement) baseElement;
       flowElement.setName(getPropertyValueAsString(PROPERTY_NAME, elementNode));
       flowElement.setDocumentation(getPropertyValueAsString(PROPERTY_DOCUMENTATION, elementNode));
-
+     /* elementNode.get("properties").get("usertaskassignment").get("assignment").get("idm");*/
       BpmnJsonConverterUtil.convertJsonToListeners(elementNode, flowElement);
 
       if (baseElement instanceof Activity) {
