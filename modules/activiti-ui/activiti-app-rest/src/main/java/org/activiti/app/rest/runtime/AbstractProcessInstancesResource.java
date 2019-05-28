@@ -13,6 +13,7 @@
 package org.activiti.app.rest.runtime;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import org.activiti.app.domain.editor.Model;
@@ -21,6 +22,7 @@ import org.activiti.app.model.component.SimpleContentTypeMapper;
 import org.activiti.app.model.runtime.CreateProcessInstanceRepresentation;
 import org.activiti.app.model.runtime.ProcessInstanceRepresentation;
 import org.activiti.app.model.runtime.RelatedContentRepresentation;
+import org.activiti.app.security.SecurityUtils;
 import org.activiti.app.service.api.ModelService;
 import org.activiti.app.service.api.UserCache;
 import org.activiti.app.service.api.UserCache.CachedUser;
@@ -47,6 +49,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestTemplate;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
 
@@ -85,6 +92,7 @@ public abstract class AbstractProcessInstancesResource {
   private TaskService taskService;
   @Autowired
   private ModelService modelService;
+  private RestTemplate restTemplate = new RestTemplate();
 
   public ProcessInstanceRepresentation startNewProcessInstance(CreateProcessInstanceRepresentation startRequest) {
     if (StringUtils.isEmpty(startRequest.getProcessDefinitionId())) {
@@ -99,9 +107,12 @@ public abstract class AbstractProcessInstancesResource {
       BpmnModel bpmnModel = repositoryService.getBpmnModel(processDefinition.getId());
       Process process = bpmnModel.getProcessById(processDefinition.getKey());
       FlowElement startElement = process.getInitialFlowElement();
+      List<String> startElementOutFlowIds = Lists.newArrayList();
       if (startElement instanceof StartEvent) {
         StartEvent startEvent = (StartEvent) startElement;
+        List<SequenceFlow> outgoingFlows = startEvent.getOutgoingFlows();
         if (StringUtils.isNotEmpty(startEvent.getFormKey())) {
+          startElementOutFlowIds = outgoingFlows.stream().map(SequenceFlow::getId).collect(Collectors.toList());
           formDefinition = formRepositoryService.getFormDefinitionByKey(startEvent.getFormKey());
           if (formDefinition != null) {
             variables = formService.getVariablesFromFormSubmission(formDefinition, startRequest.getValues(), startRequest.getOutcome());
@@ -109,18 +120,28 @@ public abstract class AbstractProcessInstancesResource {
         }
       }
       Collection<FlowElement> flowElements = process.getFlowElements();
+      Collection<FlowElement> elements = process.getFlowElements();
+      List<String> targetIds = Lists.newArrayList();
+      for (FlowElement flowElement :elements) {
+        if(flowElement instanceof SequenceFlow){
+          SequenceFlow sequenceFlow = (SequenceFlow)flowElement;
+          for (String outFlowId:startElementOutFlowIds){
+            if(outFlowId.equalsIgnoreCase(sequenceFlow.getId())){
+              targetIds.add(sequenceFlow.getTargetRef());
+            }
+          }
+        }
+      }
       for (FlowElement flowElement :flowElements) {
         if(flowElement instanceof UserTask){
           UserTask userTask = (UserTask)flowElement;
-          if(userTask.getName().equalsIgnoreCase("审批A")){
-            userTask.setAssignee("13543452355");
+          String assignee = userTask.getAssignee();
+          if(assignee.equalsIgnoreCase("leader") && targetIds.contains(userTask.getId())){
+              userTask.setAssignee(getAssignee());
           }
-
         }
       }
     }
-
-    
     ProcessInstance processInstance = activitiService.startProcessInstance(startRequest.getProcessDefinitionId(), variables, startRequest.getName());
 
     // Mark any content created as part of the form-submission connected to the process instance
@@ -154,6 +175,9 @@ public abstract class AbstractProcessInstancesResource {
 
   }
 
+
+
+
   protected Map<String, List<RelatedContent>> groupContentByField(Page<RelatedContent> allContent) {
     HashMap<String, List<RelatedContent>> result = new HashMap<String, List<RelatedContent>>();
     List<RelatedContent> list;
@@ -173,16 +197,23 @@ public abstract class AbstractProcessInstancesResource {
     return relatedContentResponse;
   }
 
-
+  /**2019-05-28 弃用，改为使用getAssignee()方法*/
   public void changeAssignee(String processInstanceId,String assignment){
     Task task = taskService.createTaskQuery().processInstanceId(processInstanceId).singleResult();
     if(task!=null && StringUtils.isNotEmpty(assignment)){
       taskService.setAssignee(task.getId(),assignment);
     }
-    /*JedisCluster jedisCluser = JedisUtils.getJedisCluser();
-    String modelId = jedisCluser.get(processInstanceKey);
-    Model model = modelService.getModel(modelId);
-    System.out.println(model.getModelEditorJson());*/
+  }
 
+  public String getAssignee(){
+    User currentUser = SecurityUtils.getCurrentUserObject();
+    String url = String.format("http://localhost:8080/api/user/getUpClassInfo/%s",currentUser.getId());
+    HttpHeaders headers = new HttpHeaders();
+    MediaType type = MediaType.parseMediaType("application/json; charset=UTF-8");
+    headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+    headers.setContentType(type);
+    HttpEntity entity = new HttpEntity<>(null, headers);
+    HttpEntity<String> result = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+    return  result.getBody();
   }
 }

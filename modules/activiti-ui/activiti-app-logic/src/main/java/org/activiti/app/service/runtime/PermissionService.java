@@ -93,7 +93,7 @@ public class PermissionService {
     if (CollectionUtils.isNotEmpty(tasks)) {
       HistoricTaskInstance task = tasks.get(0);
       if (task != null && task.getProcessInstanceId() != null) {
-        boolean hasReadPermissionOnProcessInstance =true;// hasReadPermissionOnProcessInstance(user, task.getProcessInstanceId());
+        boolean hasReadPermissionOnProcessInstance = hasReadPermissionOnProcessInstance(user, task.getProcessInstanceId());
         if (hasReadPermissionOnProcessInstance) {
           return task;
         }

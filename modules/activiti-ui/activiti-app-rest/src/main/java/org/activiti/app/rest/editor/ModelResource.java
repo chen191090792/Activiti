@@ -272,8 +272,9 @@ public class ModelResource extends AbstractModelResource {
     try {
       model = modelService.saveModel(model.getId(), name, key, description, json, newVersion, 
           newVersionComment, SecurityUtils.getCurrentUserObject());
-      JedisCluster jedisCluser = JedisUtils.getJedisCluser();
-      jedisCluser.set(model.getKey(),model.getModelEditorJson());
+      /**2019-05-28 弃用 理由，由于不需要对json数据进行解析操作*/
+      /*JedisCluster jedisCluser = JedisUtils.getJedisCluser();
+      jedisCluser.set(model.getKey(),model.getModelEditorJson());*/
       return new ModelRepresentation(model);
       
     } catch (Exception e) {
@@ -288,8 +289,9 @@ public class ModelResource extends AbstractModelResource {
     model.setDescription(description);
     model.setModelType(modelType);
     Model newModel = modelService.createModel(model, editorJson, SecurityUtils.getCurrentUserObject());
-    JedisCluster jedisCluser = JedisUtils.getJedisCluser();
-    jedisCluser.set(newModel.getKey(),newModel.getModelEditorJson());
+    /**2019-05-28 弃用 理由，由于不需要对json数据进行解析操作*/
+/*    JedisCluster jedisCluser = JedisUtils.getJedisCluser();
+    jedisCluser.set(newModel.getKey(),newModel.getModelEditorJson());*/
     return new ModelRepresentation(newModel);
   }
 

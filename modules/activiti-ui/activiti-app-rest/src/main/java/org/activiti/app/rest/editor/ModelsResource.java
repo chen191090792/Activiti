@@ -164,8 +164,9 @@ public class ModelsResource extends AbstractModelsResource {
     }
 
     Model newModel = modelService.createModel(modelRepresentation, json, SecurityUtils.getCurrentUserObject());
-    JedisCluster jedisCluser = JedisUtils.getJedisCluser();
-    jedisCluser.set(newModel.getKey(),newModel.getModelEditorJson());
+    /**2019-05-28 弃用 理由，由于不需要对json数据进行解析操作*/
+   /* JedisCluster jedisCluser = JedisUtils.getJedisCluser();
+    jedisCluser.set(newModel.getKey(),newModel.getModelEditorJson());*/
     return new ModelRepresentation(newModel);
   }
 

@@ -12,11 +12,9 @@
  */
 package org.activiti.app.service.editor;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.google.common.collect.Maps;
 import org.activiti.app.model.runtime.CompleteFormRepresentation;
 import org.activiti.app.model.runtime.ProcessInstanceVariableRepresentation;
 import org.activiti.app.security.SecurityUtils;
@@ -40,9 +38,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.client.RestTemplate;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Tijs Rademakers
@@ -72,6 +75,8 @@ public class ActivitiTaskFormService {
 
   @Autowired
   protected ObjectMapper objectMapper;
+
+  private RestTemplate restTemplate = new RestTemplate();
 
   public FormDefinition getTaskForm(String taskId) {
     HistoricTaskInstance task = permissionService.validateReadPermissionOnTask(SecurityUtils.getCurrentUserObject(), taskId);
@@ -158,10 +163,23 @@ public class ActivitiTaskFormService {
     return processInstanceVariableRepresenations;
   }
 
-  public void changeAssignee(String executionId,String processId,String assignment) {
+  public void changeAssignee(String executionId, String processId) {
     Task task = taskService.createTaskQuery().executionId(executionId).processInstanceId(processId).singleResult();
-    if(task!=null && StringUtils.isNotEmpty(assignment)){
-      taskService.setAssignee(task.getId(),assignment);
+    if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
+      taskService.setAssignee(task.getId(),getAssignee());
     }
   }
+
+  public String getAssignee(){
+    User currentUser = SecurityUtils.getCurrentUserObject();
+    String url = String.format("http://localhost:8080/api/user/getUpClassInfo/%s",currentUser.getId());
+    HttpHeaders headers = new HttpHeaders();
+    MediaType type = MediaType.parseMediaType("application/json; charset=UTF-8");
+    headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+    headers.setContentType(type);
+    HttpEntity entity = new HttpEntity<>(null, headers);
+    HttpEntity<String> result = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+    return  result.getBody();
+  }
+
 }

@@ -52,7 +52,7 @@ public class TaskFormResource {
   public void completeTaskForm(@PathVariable String taskId, @RequestBody CompleteFormRepresentation completeTaskFormRepresentation) {
     Task task = (Task)((TaskQuery)this.taskService.createTaskQuery().taskId(taskId)).singleResult();
     taskFormService.completeTaskForm(taskId, completeTaskFormRepresentation);
-    taskFormService.changeAssignee(task.getExecutionId(),task.getProcessInstanceId(),completeTaskFormRepresentation.getAssignment());
+    taskFormService.changeAssignee(task.getExecutionId(),task.getProcessInstanceId());
   }
 
   @RequestMapping(value = "/{taskId}/variables", method = RequestMethod.GET, produces = "application/json")
