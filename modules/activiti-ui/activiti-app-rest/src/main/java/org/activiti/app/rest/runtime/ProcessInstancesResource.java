@@ -22,7 +22,7 @@ public class ProcessInstancesResource extends AbstractProcessInstancesResource {
 	@RequestMapping(value = "/rest/process-instances", method = RequestMethod.POST)
 	public ProcessInstanceRepresentation startNewProcessInstance(@RequestBody CreateProcessInstanceRepresentation startRequest) {
 		ProcessInstanceRepresentation processInstanceRepresentation = super.startNewProcessInstance(startRequest);
-		//super.changeAssignee(processInstanceRepresentation.getId(),startRequest.getAssignment());
+		super.changeAssignee(processInstanceRepresentation.getId());
 		return processInstanceRepresentation;
 	}
 }

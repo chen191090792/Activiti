@@ -107,19 +107,19 @@ public abstract class AbstractProcessInstancesResource {
       BpmnModel bpmnModel = repositoryService.getBpmnModel(processDefinition.getId());
       Process process = bpmnModel.getProcessById(processDefinition.getKey());
       FlowElement startElement = process.getInitialFlowElement();
-      List<String> startElementOutFlowIds = Lists.newArrayList();
+     // List<String> startElementOutFlowIds = Lists.newArrayList();
       if (startElement instanceof StartEvent) {
         StartEvent startEvent = (StartEvent) startElement;
         List<SequenceFlow> outgoingFlows = startEvent.getOutgoingFlows();
         if (StringUtils.isNotEmpty(startEvent.getFormKey())) {
-          startElementOutFlowIds = outgoingFlows.stream().map(SequenceFlow::getId).collect(Collectors.toList());
+          //startElementOutFlowIds = outgoingFlows.stream().map(SequenceFlow::getId).collect(Collectors.toList());
           formDefinition = formRepositoryService.getFormDefinitionByKey(startEvent.getFormKey());
           if (formDefinition != null) {
             variables = formService.getVariablesFromFormSubmission(formDefinition, startRequest.getValues(), startRequest.getOutcome());
           }
         }
       }
-      Collection<FlowElement> flowElements = process.getFlowElements();
+      /*Collection<FlowElement> flowElements = process.getFlowElements();
       Collection<FlowElement> elements = process.getFlowElements();
       List<String> targetIds = Lists.newArrayList();
       for (FlowElement flowElement :elements) {
@@ -136,11 +136,11 @@ public abstract class AbstractProcessInstancesResource {
         if(flowElement instanceof UserTask){
           UserTask userTask = (UserTask)flowElement;
           String assignee = userTask.getAssignee();
-          if(assignee.equalsIgnoreCase("leader") && targetIds.contains(userTask.getId())){
+          if("leader".equalsIgnoreCase(assignee) && targetIds.contains(userTask.getId())){
               userTask.setAssignee(getAssignee());
           }
         }
-      }
+      }*/
     }
     ProcessInstance processInstance = activitiService.startProcessInstance(startRequest.getProcessDefinitionId(), variables, startRequest.getName());
 
@@ -197,11 +197,10 @@ public abstract class AbstractProcessInstancesResource {
     return relatedContentResponse;
   }
 
-  /**2019-05-28 弃用，改为使用getAssignee()方法*/
-  public void changeAssignee(String processInstanceId,String assignment){
+  public void changeAssignee(String processInstanceId){
     Task task = taskService.createTaskQuery().processInstanceId(processInstanceId).singleResult();
-    if(task!=null && StringUtils.isNotEmpty(assignment)){
-      taskService.setAssignee(task.getId(),assignment);
+    if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
+      taskService.setAssignee(task.getId(),getAssignee());
     }
   }
 
