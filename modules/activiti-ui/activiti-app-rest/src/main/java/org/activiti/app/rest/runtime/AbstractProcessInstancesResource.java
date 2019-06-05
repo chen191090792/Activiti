@@ -198,11 +198,26 @@ public abstract class AbstractProcessInstancesResource {
   }
 
   public void changeAssignee(String processInstanceId){
-    Task task = taskService.createTaskQuery().processInstanceId(processInstanceId).singleResult();
-    if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
-      taskService.setAssignee(task.getId(),getAssignee());
-    }
+//    Task task = taskService.createTaskQuery().processInstanceId(processInstanceId).list();
+    List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).list();
+//    if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
+//      taskService.setAssignee(task.getId(),getAssignee());
+//    }
+//    if(task!=null && "分管领导".equals(task.getName())){
+//      List<Task> tasks = taskService.createTaskQuery().taskAssignee("13543452355").list();
+      String [] person = {"15200706014","13543452355","15915810133"};
+      for (int i=0;i<tasks.size();i++){
+        System.out.print("tasks-------------->"+tasks.get(i).getId());
+        taskService.createTaskQuery().processInstanceId(tasks.get(i).getId()).taskAssignee(person[i]).singleResult();
+//        taskService.setAssignee(tasks.get(i).getId(),person[i]);
+      //  taskService.complete(tasks.get(i).getId());
+      }
+//    }
   }
+
+
+
+
 
   public String getAssignee(){
     User currentUser = SecurityUtils.getCurrentUserObject();
