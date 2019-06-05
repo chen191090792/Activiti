@@ -142,6 +142,8 @@ public abstract class AbstractProcessInstancesResource {
         }
       }*/
     }
+    String[]v={"13543452355","15915810133","13609769556","15200706014"};
+    variables.put("assigneeList",  Arrays.asList(v));
     ProcessInstance processInstance = activitiService.startProcessInstance(startRequest.getProcessDefinitionId(), variables, startRequest.getName());
 
     // Mark any content created as part of the form-submission connected to the process instance
@@ -198,9 +200,11 @@ public abstract class AbstractProcessInstancesResource {
   }
 
   public void changeAssignee(String processInstanceId){
-    Task task = taskService.createTaskQuery().processInstanceId(processInstanceId).singleResult();
-    if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
-      taskService.setAssignee(task.getId(),getAssignee());
+    List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
+    for(Task task:tasks){
+     if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
+        taskService.setAssignee(task.getId(),getAssignee());
+      }
     }
   }
 

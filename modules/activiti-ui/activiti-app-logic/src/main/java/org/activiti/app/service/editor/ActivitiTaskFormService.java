@@ -164,9 +164,11 @@ public class ActivitiTaskFormService {
   }
 
   public void changeAssignee(String executionId, String processId) {
-    Task task = taskService.createTaskQuery().executionId(executionId).processInstanceId(processId).singleResult();
-    if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
-      taskService.setAssignee(task.getId(),getAssignee());
+    List<Task> tasks = taskService.createTaskQuery().executionId(executionId).processInstanceId(processId).listPage(0,100000);
+    for(Task task:tasks){
+      if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
+        taskService.setAssignee(task.getId(),getAssignee());
+      }
     }
   }
 
