@@ -142,6 +142,8 @@ public abstract class AbstractProcessInstancesResource {
         }
       }*/
     }
+    String[]v={"13543452355","15915810133","13609769556","15200706014"};
+    variables.put("assigneeList",  Arrays.asList(v));
     ProcessInstance processInstance = activitiService.startProcessInstance(startRequest.getProcessDefinitionId(), variables, startRequest.getName());
 
     // Mark any content created as part of the form-submission connected to the process instance
@@ -198,21 +200,12 @@ public abstract class AbstractProcessInstancesResource {
   }
 
   public void changeAssignee(String processInstanceId){
-//    Task task = taskService.createTaskQuery().processInstanceId(processInstanceId).list();
-    List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).list();
-//    if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
-//      taskService.setAssignee(task.getId(),getAssignee());
-//    }
-//    if(task!=null && "分管领导".equals(task.getName())){
-//      List<Task> tasks = taskService.createTaskQuery().taskAssignee("13543452355").list();
-      String [] person = {"15200706014","13543452355","15915810133"};
-      for (int i=0;i<tasks.size();i++){
-        System.out.print("tasks-------------->"+tasks.get(i).getId());
-        taskService.createTaskQuery().processInstanceId(tasks.get(i).getId()).taskAssignee(person[i]).singleResult();
-//        taskService.setAssignee(tasks.get(i).getId(),person[i]);
-      //  taskService.complete(tasks.get(i).getId());
+    List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
+    for(Task task:tasks){
+     if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
+        taskService.setAssignee(task.getId(),getAssignee());
       }
-//    }
+    }
   }
 
 
