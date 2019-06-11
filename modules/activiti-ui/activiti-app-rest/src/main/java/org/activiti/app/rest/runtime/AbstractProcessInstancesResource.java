@@ -142,8 +142,8 @@ public abstract class AbstractProcessInstancesResource {
         }
       }*/
     }
-    String[]v={"13543452355","15915810133","13609769556","15200706014"};
-    variables.put("assigneeList",  Arrays.asList(v));
+ /*   String[]v={"13543452355","15915810133","13609769556","15200706014"};
+    variables.put("assigneeList",  Arrays.asList(v));*/
     ProcessInstance processInstance = activitiService.startProcessInstance(startRequest.getProcessDefinitionId(), variables, startRequest.getName());
 
     // Mark any content created as part of the form-submission connected to the process instance
