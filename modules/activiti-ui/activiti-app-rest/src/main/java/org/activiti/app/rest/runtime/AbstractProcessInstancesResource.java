@@ -208,6 +208,10 @@ public abstract class AbstractProcessInstancesResource {
     }
   }
 
+
+
+
+
   public String getAssignee(){
     User currentUser = SecurityUtils.getCurrentUserObject();
     String url = String.format("http://localhost:8080/api/user/getUpClassInfo/%s",currentUser.getId());
