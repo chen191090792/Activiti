@@ -13,6 +13,7 @@
 package org.activiti.form.engine.impl.cmd;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +27,7 @@ import org.activiti.form.model.FormFieldTypes;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormat;
 
 /**
  * @author Tijs Rademakers
@@ -92,13 +94,11 @@ public class GetVariablesFromFormSubmissionCmd implements Command<Map<String, Ob
   
   @SuppressWarnings("unchecked")
   protected Object transformFormFieldValueToVariableValue(FormField formField, Object formFieldValue) {
-
     Object result = formFieldValue;
     if (formField.getType().equals(FormFieldTypes.DATE)) {
       if (StringUtils.isNotEmpty((String) formFieldValue)) {
         try {
           result = LocalDate.parse((String) formFieldValue);
-  
         } catch (Exception e) {
           e.printStackTrace();
           result = null;
@@ -133,7 +133,7 @@ public class GetVariablesFromFormSubmissionCmd implements Command<Map<String, Ob
 
     } else if (formField.getType().equals(FormFieldTypes.UPLOAD)) {
       // We don't store the variable, the field-name will be referenced by the created related content entries
-      result = null;
+      result = formFieldValue;
 
     } else if (formField.getType().equals(FormFieldTypes.PEOPLE) || formField.getType().equals(FormFieldTypes.FUNCTIONAL_GROUP)) {
       if (formFieldValue != null && formFieldValue instanceof Map<?, ?>) {

@@ -107,59 +107,20 @@ public abstract class AbstractProcessInstancesResource {
       BpmnModel bpmnModel = repositoryService.getBpmnModel(processDefinition.getId());
       Process process = bpmnModel.getProcessById(processDefinition.getKey());
       FlowElement startElement = process.getInitialFlowElement();
-     // List<String> startElementOutFlowIds = Lists.newArrayList();
       if (startElement instanceof StartEvent) {
         StartEvent startEvent = (StartEvent) startElement;
-        List<SequenceFlow> outgoingFlows = startEvent.getOutgoingFlows();
         if (StringUtils.isNotEmpty(startEvent.getFormKey())) {
-          //startElementOutFlowIds = outgoingFlows.stream().map(SequenceFlow::getId).collect(Collectors.toList());
           formDefinition = formRepositoryService.getFormDefinitionByKey(startEvent.getFormKey());
           if (formDefinition != null) {
             variables = formService.getVariablesFromFormSubmission(formDefinition, startRequest.getValues(), startRequest.getOutcome());
           }
         }
       }
-      /*Collection<FlowElement> flowElements = process.getFlowElements();
-      Collection<FlowElement> elements = process.getFlowElements();
-      List<String> targetIds = Lists.newArrayList();
-      for (FlowElement flowElement :elements) {
-        if(flowElement instanceof SequenceFlow){
-          SequenceFlow sequenceFlow = (SequenceFlow)flowElement;
-          for (String outFlowId:startElementOutFlowIds){
-            if(outFlowId.equalsIgnoreCase(sequenceFlow.getId())){
-              targetIds.add(sequenceFlow.getTargetRef());
-            }
-          }
-        }
-      }
-      for (FlowElement flowElement :flowElements) {
-        if(flowElement instanceof UserTask){
-          UserTask userTask = (UserTask)flowElement;
-          String assignee = userTask.getAssignee();
-          if("leader".equalsIgnoreCase(assignee) && targetIds.contains(userTask.getId())){
-              userTask.setAssignee(getAssignee());
-          }
-        }
-      }*/
     }
- /*   String[]v={"13543452355","15915810133","13609769556","15200706014"};
-    variables.put("assigneeList",  Arrays.asList(v));*/
+    String[]v={"13543452355","15915810133","13609769556","15200706014"};
+    variables.put("assigneeList",  Arrays.asList(v));
     ProcessInstance processInstance = activitiService.startProcessInstance(startRequest.getProcessDefinitionId(), variables, startRequest.getName());
 
-    // Mark any content created as part of the form-submission connected to the process instance
-    /*if (formSubmission != null) {
-      if (formSubmission.hasContent()) {
-        ObjectNode contentNode = objectMapper.createObjectNode();
-        submittedFormValuesJson.put("content", contentNode);
-        for (Entry<String, List<RelatedContent>> entry : formSubmission.getVariableContent().entrySet()) {
-          ArrayNode contentArray = objectMapper.createArrayNode();
-          for (RelatedContent content : entry.getValue()) {
-            relatedContentService.setContentField(content.getId(), entry.getKey(), processInstance.getId(), null);
-            contentArray.add(content.getId());
-          }
-          contentNode.put(entry.getKey(), contentArray);
-        }
-      }*/
 
     HistoricProcessInstance historicProcess = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstance.getId()).singleResult();
     if (formDefinition != null) {

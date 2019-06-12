@@ -38,9 +38,13 @@ public class TaskRepresentation extends AbstractRepresentation {
   protected String description;
   protected String category;
   protected UserRepresentation assignee;
+  protected UserRepresentation startedBy;
   protected Date created;
+  protected String createDate;
   protected Date dueDate;
+  protected String dueeDate;
   protected Date endDate;
+  protected String endeDate;
   protected Long duration;
   protected Integer priority;
   protected String processInstanceId;
@@ -321,5 +325,37 @@ public class TaskRepresentation extends AbstractRepresentation {
 
   public void setInvolvedPeople(List<UserRepresentation> involvedPeople) {
     this.involvedPeople = involvedPeople;
+  }
+
+  public String getCreateDate() {
+    return createDate;
+  }
+
+  public void setCreateDate(String createDate) {
+    this.createDate = createDate;
+  }
+
+  public String getDueeDate() {
+    return dueeDate;
+  }
+
+  public void setDueeDate(String dueeDate) {
+    this.dueeDate = dueeDate;
+  }
+
+  public String getEndeDate() {
+    return endeDate;
+  }
+
+  public void setEndeDate(String endeDate) {
+    this.endeDate = endeDate;
+  }
+
+  public UserRepresentation getStartedBy() {
+    return startedBy;
+  }
+
+  public void setStartedBy(UserRepresentation startedBy) {
+    this.startedBy = startedBy;
   }
 }

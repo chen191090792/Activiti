@@ -39,28 +39,7 @@ public class ActivitiService {
 	private RuntimeService runtimeService;
 	
 	public ProcessInstance startProcessInstance(String processDefinitionId, Map<String, Object> variables, String processInstanceName) {
-        logger.info("processDefinitionId--------->"+processDefinitionId);
-        logger.info("processInstanceName--------->"+processInstanceName);
-        logger.info("variables--------->"+variables);
-        /*******************************个人任务测试代码start****************************************/
-        variables = new HashMap<String, Object>();
-        List<String> usr = new ArrayList<String>();
-        usr.add("15200706014");
-        usr.add("15915810133");
-        usr.add("13543452355");
-        variables.put("assigneeList",usr);
-       // ProcessInstance processInstance =  runtimeService.startProcessInstanceById(processDefinitionId,variables);
-
-		 // Actually start the process
-        // No need to pass the tenant id here, the process definition is already tenant based and the process instance will inherit it
         ProcessInstance processInstance = runtimeService.startProcessInstanceById(processDefinitionId, variables);
-        logger.info("getProcessDefinitionId-------------->"+processInstance.getProcessDefinitionId());
-        logger.info("getProcessDefinitionKey-------------->"+processInstance.getProcessDefinitionKey());
-        logger.info("processDefinitionName-------------->"+processInstance.getProcessDefinitionName());
-        logger.info("processInstanceId-------------->"+processInstance.getProcessInstanceId());
-        logger.info("getId-------------->"+processInstance.getId());
-        /*******************************个人任务测试代码end****************************************/
-        // Can only set name in case process didn't end instantly
         if (!processInstance.isEnded() && processInstanceName != null) {
             runtimeService.setProcessInstanceName(processInstance.getId(), processInstanceName);
         }

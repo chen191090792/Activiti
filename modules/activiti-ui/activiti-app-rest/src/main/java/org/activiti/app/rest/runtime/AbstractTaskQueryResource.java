@@ -14,6 +14,7 @@ package org.activiti.app.rest.runtime;
 
 import java.text.ParseException;
 import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -26,11 +27,13 @@ import javax.inject.Inject;
 
 import org.activiti.app.model.common.ResultListDataRepresentation;
 import org.activiti.app.model.idm.UserRepresentation;
+import org.activiti.app.model.runtime.ProcessInstanceRepresentation;
 import org.activiti.app.model.runtime.TaskRepresentation;
 import org.activiti.app.security.SecurityUtils;
 import org.activiti.app.service.api.UserCache;
 import org.activiti.app.service.api.UserCache.CachedUser;
 import org.activiti.app.service.exception.BadRequestException;
+import org.activiti.app.service.exception.NotFoundException;
 import org.activiti.app.service.runtime.PermissionService;
 import org.activiti.editor.language.json.converter.util.CollectionUtils;
 import org.activiti.engine.HistoryService;
@@ -45,6 +48,7 @@ import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.TaskInfo;
 import org.activiti.engine.task.TaskInfoQueryWrapper;
+import org.activiti.form.model.FormDefinition;
 import org.apache.commons.lang3.StringUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -283,6 +287,7 @@ public abstract class AbstractTaskQueryResource {
   protected List<TaskRepresentation> convertTaskInfoList(List<? extends TaskInfo> tasks, Map<String, String> processInstanceNames) {
     List<TaskRepresentation> result = new ArrayList<TaskRepresentation>();
     if (CollectionUtils.isNotEmpty(tasks)) {
+      SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
       for (TaskInfo task : tasks) {
         ProcessDefinitionEntity processDefinition = null;
         if (task.getProcessDefinitionId() != null) {
@@ -295,12 +300,44 @@ public abstract class AbstractTaskQueryResource {
           if (cachedUser != null && cachedUser.getUser() != null) {
             User assignee = cachedUser.getUser();
             representation.setAssignee(new UserRepresentation(assignee));
+            representation.setCreateDate(dateFormat.format(new Date(representation.getCreated().getTime())));
+            if(representation.getDueDate()!=null){
+              representation.setDueeDate(dateFormat.format(new Date(representation.getDueDate().getTime())));
+            }
+            if(representation.getEndDate()!=null){
+              representation.setEndeDate(dateFormat.format(new Date(representation.getEndDate().getTime())));
+            }
+            representation.setStartedBy(getStartedBy(representation.getProcessInstanceId()));
           }
         }
-        
         result.add(representation);
       }
     }
     return result;
+  }
+
+  public UserRepresentation getStartedBy(String processInstanceId){
+
+    UserRepresentation userRepresentation = null;
+    HistoricProcessInstance processInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+
+    if (!permissionService.hasReadPermissionOnProcessInstance(SecurityUtils.getCurrentUserObject(), processInstance, processInstanceId)) {
+      throw new NotFoundException("Process with id: " + processInstanceId + " does not exist or is not available for this user");
+    }
+
+    ProcessDefinitionEntity processDefinition = (ProcessDefinitionEntity) repositoryService.getProcessDefinition(processInstance.getProcessDefinitionId());
+
+    User userRep = null;
+    if (processInstance.getStartUserId() != null) {
+      CachedUser user = userCache.getUser(processInstance.getStartUserId());
+      if (user != null && user.getUser() != null) {
+        userRep = user.getUser();
+      }
+    }
+    ProcessInstanceRepresentation processInstanceResult = new ProcessInstanceRepresentation(processInstance, processDefinition, processDefinition.isGraphicalNotationDefined(), userRep);
+    if(processInstanceResult!=null){
+      userRepresentation = processInstanceResult.getStartedBy();
+    }
+    return userRepresentation;
   }
 }
