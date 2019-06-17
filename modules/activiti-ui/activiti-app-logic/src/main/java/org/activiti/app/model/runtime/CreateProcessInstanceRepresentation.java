@@ -12,10 +12,12 @@
  */
 package org.activiti.app.model.runtime;
 
+import java.util.List;
+
 public class CreateProcessInstanceRepresentation extends CompleteFormRepresentation {
     private String processDefinitionId;
     private String name;
-    private String assignment;
+    private List<String> assigneeList;
 
     public void setName(String name) {
         this.name = name;
@@ -31,11 +33,11 @@ public class CreateProcessInstanceRepresentation extends CompleteFormRepresentat
         return processDefinitionId;
     }
 
-    public String getAssignment() {
-        return assignment;
+    public List<String> getAssigneeList() {
+        return assigneeList;
     }
 
-    public void setAssignment(String assignment) {
-        this.assignment = assignment;
+    public void setAssigneeList(List<String> assigneeList) {
+        this.assigneeList = assigneeList;
     }
 }

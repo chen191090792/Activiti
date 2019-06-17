@@ -117,11 +117,11 @@ public abstract class AbstractProcessInstancesResource {
         }
       }
     }
-    String[]v={"13543452355","15915810133","13609769556","15200706014"};
-    variables.put("assigneeList",  Arrays.asList(v));
+    /** 2019-06-14 自定义会签字段*/
+    if(startRequest.getAssigneeList()!=null && startRequest.getAssigneeList().size()>0){
+       variables.put("assigneeList",  startRequest.getAssigneeList());
+    }
     ProcessInstance processInstance = activitiService.startProcessInstance(startRequest.getProcessDefinitionId(), variables, startRequest.getName());
-
-
     HistoricProcessInstance historicProcess = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstance.getId()).singleResult();
     if (formDefinition != null) {
       formService.storeSubmittedForm(variables, formDefinition, null, historicProcess.getId());
