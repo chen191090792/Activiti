@@ -13,10 +13,8 @@
 package org.activiti.app.rest.runtime;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import org.activiti.app.domain.editor.Model;
+import com.google.common.collect.Maps;
 import org.activiti.app.domain.runtime.RelatedContent;
 import org.activiti.app.model.component.SimpleContentTypeMapper;
 import org.activiti.app.model.runtime.CreateProcessInstanceRepresentation;
@@ -30,6 +28,8 @@ import org.activiti.app.service.exception.BadRequestException;
 import org.activiti.app.service.runtime.ActivitiService;
 import org.activiti.app.service.runtime.PermissionService;
 import org.activiti.app.service.runtime.RelatedContentService;
+import org.activiti.app.util.JsonUtils;
+import org.activiti.app.util.MessageSendUtils;
 import org.activiti.bpmn.model.*;
 import org.activiti.bpmn.model.Process;
 import org.activiti.engine.HistoryService;
@@ -54,8 +54,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.JedisCluster;
 
 public abstract class AbstractProcessInstancesResource {
 
@@ -164,24 +162,11 @@ public abstract class AbstractProcessInstancesResource {
     List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
     for(Task task:tasks){
      if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
-        taskService.setAssignee(task.getId(),getAssignee());
+        taskService.setAssignee(task.getId(), MessageSendUtils.getAssignee());
       }
+      MessageSendUtils.sendWxMsg(task);
+      MessageSendUtils.sendEmail(task);
     }
   }
 
-
-
-
-
-  public String getAssignee(){
-    User currentUser = SecurityUtils.getCurrentUserObject();
-    String url = String.format("http://localhost:8080/api/user/getUpClassInfo/%s",currentUser.getId());
-    HttpHeaders headers = new HttpHeaders();
-    MediaType type = MediaType.parseMediaType("application/json; charset=UTF-8");
-    headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-    headers.setContentType(type);
-    HttpEntity entity = new HttpEntity<>(null, headers);
-    HttpEntity<String> result = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-    return  result.getBody();
-  }
 }

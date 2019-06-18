@@ -21,6 +21,9 @@ import org.activiti.app.security.SecurityUtils;
 import org.activiti.app.service.exception.NotFoundException;
 import org.activiti.app.service.exception.NotPermittedException;
 import org.activiti.app.service.runtime.PermissionService;
+import org.activiti.app.util.JsonUtils;
+import org.activiti.app.util.MessageSendUtils;
+import org.activiti.bpmn.model.Message;
 import org.activiti.engine.ActivitiException;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
@@ -30,7 +33,6 @@ import org.activiti.engine.history.HistoricVariableInstance;
 import org.activiti.engine.identity.User;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.task.Task;
-import org.activiti.engine.task.TaskQuery;
 import org.activiti.form.api.FormRepositoryService;
 import org.activiti.form.api.FormService;
 import org.activiti.form.model.FormDefinition;
@@ -43,9 +45,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.client.RestTemplate;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Tijs Rademakers
@@ -167,21 +166,12 @@ public class ActivitiTaskFormService {
     List<Task> tasks = taskService.createTaskQuery().executionId(executionId).processInstanceId(processId).listPage(0,100000);
     for(Task task:tasks){
       if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
-        taskService.setAssignee(task.getId(),getAssignee());
+        taskService.setAssignee(task.getId(), MessageSendUtils.getAssignee());
       }
+      MessageSendUtils.sendWxMsg(task);
+      MessageSendUtils.sendEmail(task);
     }
   }
 
-  public String getAssignee(){
-    User currentUser = SecurityUtils.getCurrentUserObject();
-    String url = String.format("http://localhost:8080/api/user/getUpClassInfo/%s",currentUser.getId());
-    HttpHeaders headers = new HttpHeaders();
-    MediaType type = MediaType.parseMediaType("application/json; charset=UTF-8");
-    headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-    headers.setContentType(type);
-    HttpEntity entity = new HttpEntity<>(null, headers);
-    HttpEntity<String> result = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-    return  result.getBody();
-  }
 
 }
