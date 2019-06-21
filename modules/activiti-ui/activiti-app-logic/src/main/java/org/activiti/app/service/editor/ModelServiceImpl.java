@@ -177,7 +177,6 @@ public class ModelServiceImpl implements ModelService {
     newModel.setCreatedBy(createdBy.getId());
     newModel.setLastUpdated(Calendar.getInstance().getTime());
     newModel.setLastUpdatedBy(createdBy.getId());
-    
     persistModel(newModel);
     return newModel;
   }
@@ -196,7 +195,7 @@ public class ModelServiceImpl implements ModelService {
     newModel.setModelEditorJson(editorJson);
     newModel.setLastUpdated(Calendar.getInstance().getTime());
     newModel.setLastUpdatedBy(createdBy.getId());
-
+    newModel.setProcessType(model.getProcessType());
     persistModel(newModel);
     return newModel;
   }

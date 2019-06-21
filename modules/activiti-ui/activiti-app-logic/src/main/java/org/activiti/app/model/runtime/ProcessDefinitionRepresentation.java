@@ -33,6 +33,7 @@ public class ProcessDefinitionRepresentation extends AbstractRepresentation {
     protected String deploymentId;
     protected String tenantId;
     protected boolean hasStartForm;
+    private String processType;
     
     public ProcessDefinitionRepresentation(ProcessDefinition processDefinition) {
         this.id = processDefinition.getId();
@@ -119,5 +120,12 @@ public class ProcessDefinitionRepresentation extends AbstractRepresentation {
     public boolean getHasStartForm() {
         return hasStartForm;
     }
-    
+
+    public String getProcessType() {
+        return processType;
+    }
+
+    public void setProcessType(String processType) {
+        this.processType = processType;
+    }
 }

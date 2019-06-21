@@ -31,6 +31,7 @@ public class AppDefinitionRepresentation extends AbstractRepresentation {
   private Integer version;
   private Date created;
   private AppDefinition definition;
+  private String processType;
 
   public AppDefinitionRepresentation() {
     // Empty constructor for Jackson
@@ -99,5 +100,13 @@ public class AppDefinitionRepresentation extends AbstractRepresentation {
 
   public void setDefinition(AppDefinition definition) {
     this.definition = definition;
+  }
+
+  public String getProcessType() {
+    return processType;
+  }
+
+  public void setProcessType(String processType) {
+    this.processType = processType;
   }
 }

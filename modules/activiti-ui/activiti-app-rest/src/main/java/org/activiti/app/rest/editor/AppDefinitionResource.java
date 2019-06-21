@@ -65,7 +65,10 @@ public class AppDefinitionResource {
   @RequestMapping(value = "/rest/app-definitions/{modelId}", method = RequestMethod.GET, produces = "application/json")
   public AppDefinitionRepresentation getAppDefinition(@PathVariable("modelId") String modelId) {
     Model model = modelService.getModel(modelId);
-    return createAppDefinitionRepresentation(model);
+    String processType = model.getProcessType();
+    AppDefinitionRepresentation appDefinitionRepresentation = createAppDefinitionRepresentation(model);
+    appDefinitionRepresentation.setProcessType(processType);
+    return appDefinitionRepresentation;
   }
 
   @RequestMapping(value = "/rest/app-definitions/{modelId}/history/{modelHistoryId}", method = RequestMethod.GET, produces = "application/json")
@@ -86,6 +89,7 @@ public class AppDefinitionResource {
     model.setName(updatedModel.getAppDefinition().getName());
     model.setKey(updatedModel.getAppDefinition().getKey());
     model.setDescription(updatedModel.getAppDefinition().getDescription());
+    model.setProcessType(updatedModel.getAppDefinition().getProcessType());
     String editorJson = null;
     try {
       editorJson = objectMapper.writeValueAsString(updatedModel.getAppDefinition().getDefinition());

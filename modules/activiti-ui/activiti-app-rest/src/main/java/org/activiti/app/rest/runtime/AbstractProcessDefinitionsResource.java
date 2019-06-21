@@ -17,8 +17,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.activiti.app.domain.editor.AbstractModel;
+import org.activiti.app.domain.editor.Model;
 import org.activiti.app.model.common.ResultListDataRepresentation;
 import org.activiti.app.model.runtime.ProcessDefinitionRepresentation;
+import org.activiti.app.service.api.ModelService;
+import org.activiti.app.service.editor.ModelServiceImpl;
 import org.activiti.app.service.runtime.PermissionService;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.StartEvent;
@@ -42,6 +46,8 @@ public abstract class AbstractProcessDefinitionsResource {
 
   @Autowired
   protected PermissionService permissionService;
+  @Autowired
+  private ModelService modelService;
 
   public ResultListDataRepresentation getProcessDefinitions(Boolean latest, String deploymentKey) {
 
@@ -89,8 +95,23 @@ public abstract class AbstractProcessDefinitionsResource {
 
           startFormMap.put(processDefinition.getId(), hasStartForm);
         }
-        
+        Deployment deployment = (Deployment)this.repositoryService.createDeploymentQuery().deploymentId(processDefinition.getDeploymentId()).singleResult();
+        String processType ="";
+        if(deployment!=null){
+          List<AbstractModel> modelsByModelType = modelService.getModelsByModelType(3);
+          for(AbstractModel abstractModel:modelsByModelType){
+            if(abstractModel.getKey().equals(deployment.getKey())){
+              System.out.println(abstractModel.getId());
+              if(StringUtils.isNotEmpty(abstractModel.getId())){
+                Model model = modelService.getModel(abstractModel.getId());
+                processType = model.getProcessType();
+              }
+            }
+          }
+        }
+
         ProcessDefinitionRepresentation rep = new ProcessDefinitionRepresentation(processDefinition);
+        rep.setProcessType(processType);
         rep.setHasStartForm(startFormMap.get(processDefinition.getId()));
         result.add(rep);
       }

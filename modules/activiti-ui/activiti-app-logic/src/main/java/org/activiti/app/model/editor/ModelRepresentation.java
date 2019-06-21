@@ -37,6 +37,7 @@ public class ModelRepresentation extends AbstractRepresentation {
   protected int version;
   protected String comment;
   protected Integer modelType;
+  private String processType;
 
   public ModelRepresentation(AbstractModel model) {
     initialize(model);
@@ -167,5 +168,13 @@ public class ModelRepresentation extends AbstractRepresentation {
   public void updateModel(Model model) {
     model.setDescription(this.description);
     model.setName(this.name);
+  }
+
+  public String getProcessType() {
+    return processType;
+  }
+
+  public void setProcessType(String processType) {
+    this.processType = processType;
   }
 }

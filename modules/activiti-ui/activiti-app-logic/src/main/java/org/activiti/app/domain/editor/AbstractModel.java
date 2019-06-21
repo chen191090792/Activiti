@@ -76,6 +76,7 @@ public class AbstractModel {
   @Column(name = "model_type")
   protected Integer modelType;
 
+
   public AbstractModel() {
     this.created = new Date();
   }
