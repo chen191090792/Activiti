@@ -19,13 +19,14 @@ import java.util.Map;
  * @Description: 消息发送类
  * @date 2019/6/18 14:29
  */
-public class MessageSendUtils {
+public class KiteApiCallUtils {
 
     private static RestTemplate restTemplate = new RestTemplate();
     private static String GET_ASSIGNEE_URL="http://localhost:8080/api/user/getUpClassInfo/%s";
     private static String MEDIA_TYPE="application/json; charset=UTF-8";
     private static String WX_MSG_URL="http://localhost:8080/api/weixin/notice";
     private static String EMAIL_MSG_URL="http://localhost:8080/api/weixin/email";
+    private static String CHECK_ADMIN_URL="http://localhost:8080/api/weixin/checkAdmin/%s";
 
     public static String getAssignee(){
         User currentUser = SecurityUtils.getCurrentUserObject();
@@ -51,7 +52,7 @@ public class MessageSendUtils {
         String result = restTemplate.postForObject(EMAIL_MSG_URL, entity, String.class);
         return  result;
     }
-    private static HttpEntity getHttpEntity(Task task) {
+    public static HttpEntity getHttpEntity(Task task) {
         JsonUtils utils = new JsonUtils();
         Map<String,Object> data = Maps.newConcurrentMap();
         data.put("taskId",task.getName());
@@ -65,4 +66,15 @@ public class MessageSendUtils {
         return new HttpEntity<>(dataJson, headers);
     }
 
+    public static boolean checkAdmin(){
+        User currentUser = SecurityUtils.getCurrentUserObject();
+        String url = String.format(CHECK_ADMIN_URL,currentUser.getId());
+        HttpHeaders headers = new HttpHeaders();
+        MediaType type = MediaType.parseMediaType(MEDIA_TYPE);
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        headers.setContentType(type);
+        HttpEntity entity = new HttpEntity<>(null, headers);
+        HttpEntity<Boolean> result = restTemplate.exchange(url, HttpMethod.GET, entity, Boolean.class);
+        return  result.getBody();
+    }
 }

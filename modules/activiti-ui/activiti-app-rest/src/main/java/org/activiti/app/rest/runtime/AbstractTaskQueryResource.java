@@ -35,6 +35,7 @@ import org.activiti.app.service.api.UserCache.CachedUser;
 import org.activiti.app.service.exception.BadRequestException;
 import org.activiti.app.service.exception.NotFoundException;
 import org.activiti.app.service.runtime.PermissionService;
+import org.activiti.app.util.KiteApiCallUtils;
 import org.activiti.editor.language.json.converter.util.CollectionUtils;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
@@ -320,11 +321,12 @@ public abstract class AbstractTaskQueryResource {
 
     UserRepresentation userRepresentation = null;
     HistoricProcessInstance processInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
-
-    if (!permissionService.hasReadPermissionOnProcessInstance(SecurityUtils.getCurrentUserObject(), processInstance, processInstanceId)) {
-      throw new NotFoundException("Process with id: " + processInstanceId + " does not exist or is not available for this user");
+    boolean admin = KiteApiCallUtils.checkAdmin();
+    if(!admin){
+      if (!permissionService.hasReadPermissionOnProcessInstance(SecurityUtils.getCurrentUserObject(), processInstance, processInstanceId)) {
+        throw new NotFoundException("Process with id: " + processInstanceId + " does not exist or is not available for this user");
+      }
     }
-
     ProcessDefinitionEntity processDefinition = (ProcessDefinitionEntity) repositoryService.getProcessDefinition(processInstance.getProcessDefinitionId());
 
     User userRep = null;
@@ -340,4 +342,5 @@ public abstract class AbstractTaskQueryResource {
     }
     return userRepresentation;
   }
+
 }

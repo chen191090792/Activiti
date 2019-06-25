@@ -14,16 +14,13 @@ package org.activiti.app.service.editor;
 
 import java.util.*;
 
-import com.google.common.collect.Maps;
 import org.activiti.app.model.runtime.CompleteFormRepresentation;
 import org.activiti.app.model.runtime.ProcessInstanceVariableRepresentation;
 import org.activiti.app.security.SecurityUtils;
 import org.activiti.app.service.exception.NotFoundException;
 import org.activiti.app.service.exception.NotPermittedException;
 import org.activiti.app.service.runtime.PermissionService;
-import org.activiti.app.util.JsonUtils;
-import org.activiti.app.util.MessageSendUtils;
-import org.activiti.bpmn.model.Message;
+import org.activiti.app.util.KiteApiCallUtils;
 import org.activiti.engine.ActivitiException;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
@@ -40,7 +37,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -166,10 +162,10 @@ public class ActivitiTaskFormService {
     List<Task> tasks = taskService.createTaskQuery().executionId(executionId).processInstanceId(processId).listPage(0,100000);
     for(Task task:tasks){
       if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
-        taskService.setAssignee(task.getId(), MessageSendUtils.getAssignee());
+        taskService.setAssignee(task.getId(), KiteApiCallUtils.getAssignee());
       }
-      MessageSendUtils.sendWxMsg(task);
-      MessageSendUtils.sendEmail(task);
+      KiteApiCallUtils.sendWxMsg(task);
+      KiteApiCallUtils.sendEmail(task);
     }
   }
 

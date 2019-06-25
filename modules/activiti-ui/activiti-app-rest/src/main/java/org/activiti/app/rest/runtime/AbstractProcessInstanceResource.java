@@ -21,6 +21,7 @@ import org.activiti.app.service.api.UserCache.CachedUser;
 import org.activiti.app.service.exception.NotFoundException;
 import org.activiti.app.service.runtime.PermissionService;
 import org.activiti.app.service.runtime.ProcessInstanceService;
+import org.activiti.app.util.KiteApiCallUtils;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FlowElement;
 import org.activiti.bpmn.model.Process;
@@ -98,8 +99,8 @@ public abstract class AbstractProcessInstanceResource {
   public FormDefinition getProcessInstanceStartForm(String processInstanceId, HttpServletResponse response) {
 
     HistoricProcessInstance processInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
-
-    if (!permissionService.hasReadPermissionOnProcessInstance(SecurityUtils.getCurrentUserObject(), processInstance, processInstanceId)) {
+    boolean admin = KiteApiCallUtils.checkAdmin();
+    if (!admin && !permissionService.hasReadPermissionOnProcessInstance(SecurityUtils.getCurrentUserObject(), processInstance, processInstanceId)) {
       throw new NotFoundException("Process with id: " + processInstanceId + " does not exist or is not available for this user");
     }
     

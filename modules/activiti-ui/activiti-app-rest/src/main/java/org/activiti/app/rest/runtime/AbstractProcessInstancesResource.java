@@ -14,13 +14,11 @@ package org.activiti.app.rest.runtime;
 
 import java.util.*;
 
-import com.google.common.collect.Maps;
 import org.activiti.app.domain.runtime.RelatedContent;
 import org.activiti.app.model.component.SimpleContentTypeMapper;
 import org.activiti.app.model.runtime.CreateProcessInstanceRepresentation;
 import org.activiti.app.model.runtime.ProcessInstanceRepresentation;
 import org.activiti.app.model.runtime.RelatedContentRepresentation;
-import org.activiti.app.security.SecurityUtils;
 import org.activiti.app.service.api.ModelService;
 import org.activiti.app.service.api.UserCache;
 import org.activiti.app.service.api.UserCache.CachedUser;
@@ -28,8 +26,7 @@ import org.activiti.app.service.exception.BadRequestException;
 import org.activiti.app.service.runtime.ActivitiService;
 import org.activiti.app.service.runtime.PermissionService;
 import org.activiti.app.service.runtime.RelatedContentService;
-import org.activiti.app.util.JsonUtils;
-import org.activiti.app.util.MessageSendUtils;
+import org.activiti.app.util.KiteApiCallUtils;
 import org.activiti.bpmn.model.*;
 import org.activiti.bpmn.model.Process;
 import org.activiti.engine.HistoryService;
@@ -49,10 +46,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
 public abstract class AbstractProcessInstancesResource {
@@ -162,10 +155,10 @@ public abstract class AbstractProcessInstancesResource {
     List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
     for(Task task:tasks){
      if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
-        taskService.setAssignee(task.getId(), MessageSendUtils.getAssignee());
+        taskService.setAssignee(task.getId(), KiteApiCallUtils.getAssignee());
       }
-      MessageSendUtils.sendWxMsg(task);
-      MessageSendUtils.sendEmail(task);
+      KiteApiCallUtils.sendWxMsg(task);
+      KiteApiCallUtils.sendEmail(task);
     }
   }
 
