@@ -306,7 +306,6 @@ public abstract class BaseBpmnJsonConverter implements EditorJsonConstants, Sten
         Activity activity = (Activity) baseElement;
         activity.setAsynchronous(getPropertyValueAsBoolean(PROPERTY_ASYNCHRONOUS, elementNode));
         activity.setNotExclusive(!getPropertyValueAsBoolean(PROPERTY_EXCLUSIVE, elementNode));
-
         String multiInstanceType = getPropertyValueAsString(PROPERTY_MULTIINSTANCE_TYPE, elementNode);
         String multiInstanceCardinality = getPropertyValueAsString(PROPERTY_MULTIINSTANCE_CARDINALITY, elementNode);
         String multiInstanceCollection = getPropertyValueAsString(PROPERTY_MULTIINSTANCE_COLLECTION, elementNode);
@@ -322,10 +321,19 @@ public abstract class BaseBpmnJsonConverter implements EditorJsonConstants, Sten
           } else {
             multiInstanceObject.setSequential(false);
           }
+
           multiInstanceObject.setLoopCardinality(multiInstanceCardinality);
           multiInstanceObject.setInputDataItem(multiInstanceCollection);
           multiInstanceObject.setElementVariable(multiInstanceVariable);
           multiInstanceObject.setCompletionCondition(multiInstanceCondition);
+          activity.setLoopCharacteristics(multiInstanceObject);
+        }
+        boolean willitsign = getPropertyValueAsBoolean(PROPERTY_WILLITSIGN_CONDITION, elementNode);
+        if(willitsign){
+          MultiInstanceLoopCharacteristics multiInstanceObject = new MultiInstanceLoopCharacteristics();
+          multiInstanceObject.setSequential(false);
+          multiInstanceObject.setInputDataItem("${assigneeList}");
+          multiInstanceObject.setElementVariable("assignee");
           activity.setLoopCharacteristics(multiInstanceObject);
         }
 

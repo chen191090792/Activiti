@@ -118,6 +118,7 @@ public interface StencilConstants {
   final String PROPERTY_MULTIINSTANCE_COLLECTION = "multiinstance_collection";
   final String PROPERTY_MULTIINSTANCE_VARIABLE = "multiinstance_variable";
   final String PROPERTY_MULTIINSTANCE_CONDITION = "multiinstance_condition";
+  final String PROPERTY_WILLITSIGN_CONDITION = "willitsign";
 
   final String PROPERTY_TASK_LISTENERS = "tasklisteners";
   final String PROPERTY_EXECUTION_LISTENERS = "executionlisteners";
