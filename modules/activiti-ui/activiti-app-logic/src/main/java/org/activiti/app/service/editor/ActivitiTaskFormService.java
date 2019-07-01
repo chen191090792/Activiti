@@ -17,6 +17,7 @@ import java.util.*;
 import org.activiti.app.model.runtime.CompleteFormRepresentation;
 import org.activiti.app.model.runtime.ProcessInstanceVariableRepresentation;
 import org.activiti.app.security.SecurityUtils;
+import org.activiti.app.service.exception.MyTaskException;
 import org.activiti.app.service.exception.NotFoundException;
 import org.activiti.app.service.exception.NotPermittedException;
 import org.activiti.app.service.runtime.PermissionService;
@@ -40,6 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -115,7 +117,7 @@ public class ActivitiTaskFormService {
 
     return formDefinition;
   }
-  
+  @Transactional
   public void completeTaskForm(String taskId, CompleteFormRepresentation completeTaskFormRepresentation) {
 
     // Get the form definition
@@ -138,6 +140,7 @@ public class ActivitiTaskFormService {
         completeTaskFormRepresentation.getOutcome());
     formService.storeSubmittedForm(variables, formDefinition, task.getId(), task.getProcessInstanceId());
     taskService.complete(taskId, variables);
+    changeAssignee(task.getExecutionId(),task.getProcessInstanceId());
   }
   
   public List<ProcessInstanceVariableRepresentation> getProcessInstanceVariables(String taskId) {
@@ -161,11 +164,20 @@ public class ActivitiTaskFormService {
   public void changeAssignee(String executionId, String processId) {
     List<Task> tasks = taskService.createTaskQuery().executionId(executionId).processInstanceId(processId).listPage(0,100000);
     for(Task task:tasks){
+      String assignee = KiteApiCallUtils.getAssignee();
       if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
-        taskService.setAssignee(task.getId(), KiteApiCallUtils.getAssignee());
+        if(StringUtils.isNotEmpty(assignee)){
+          if(assignee.contains("-1")){
+            throw new MyTaskException("上级领导未找到");
+          }else{
+            taskService.setAssignee(task.getId(),assignee);
+            KiteApiCallUtils.sendWxMsg(task);
+            KiteApiCallUtils.sendEmail(task);
+          }
+        }else{
+          throw new MyTaskException("上级领导未找到");
+        }
       }
-      KiteApiCallUtils.sendWxMsg(task);
-      KiteApiCallUtils.sendEmail(task);
     }
   }
 

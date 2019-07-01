@@ -53,10 +53,11 @@ public class KiteApiCallUtils {
         return  result;
     }
     public static HttpEntity getHttpEntity(Task task) {
+        User currentUser = SecurityUtils.getCurrentUserObject();
         JsonUtils utils = new JsonUtils();
         Map<String,Object> data = Maps.newConcurrentMap();
         data.put("taskId",task.getName());
-        data.put("userId",task.getAssignee());
+        data.put("userId",currentUser.getId());
         data.put("taskName",task.getName());
         String dataJson = utils.object2Json(data);
         HttpHeaders headers = new HttpHeaders();
