@@ -24,8 +24,17 @@ public class ProcessInstancesResource extends AbstractProcessInstancesResource {
 
 	@RequestMapping(value = "/rest/process-instances", method = RequestMethod.POST)
 	public ProcessInstanceRepresentation startNewProcessInstance(@RequestBody CreateProcessInstanceRepresentation startRequest) {
-		ProcessInstanceRepresentation processInstanceRepresentation = super.startNewProcessInstance(startRequest);
-		super.changeAssignee(processInstanceRepresentation.getId());
+		ProcessInstanceRepresentation processInstanceRepresentation = null;
+		try {
+			processInstanceRepresentation = super.startNewProcessInstance(startRequest);
+			processInstanceRepresentation.setErrorCode(0);
+			processInstanceRepresentation.setErrorMsg("发起成功！");
+		} catch (Exception e) {
+			processInstanceRepresentation = new ProcessInstanceRepresentation();
+			processInstanceRepresentation.setErrorCode(-1);
+			processInstanceRepresentation.setErrorMsg("流程发出失败："+e.getMessage());
+			e.printStackTrace();
+		}
 		return processInstanceRepresentation;
 	}
 }

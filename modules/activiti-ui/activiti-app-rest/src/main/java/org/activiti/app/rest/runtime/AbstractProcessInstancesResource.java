@@ -25,19 +25,19 @@ import org.activiti.app.service.api.UserCache.CachedUser;
 import org.activiti.app.service.exception.BadRequestException;
 import org.activiti.app.service.runtime.ActivitiService;
 import org.activiti.app.service.runtime.PermissionService;
+import org.activiti.app.service.runtime.ProcessInstanceService;
 import org.activiti.app.service.runtime.RelatedContentService;
-import org.activiti.app.util.KiteApiCallUtils;
 import org.activiti.bpmn.model.*;
 import org.activiti.bpmn.model.Process;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
+import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.identity.User;
 import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
-import org.activiti.engine.task.Task;
 import org.activiti.form.api.FormRepositoryService;
 import org.activiti.form.api.FormService;
 import org.activiti.form.model.FormDefinition;
@@ -83,6 +83,12 @@ public abstract class AbstractProcessInstancesResource {
   private TaskService taskService;
   @Autowired
   private ModelService modelService;
+  @Autowired
+  private ProcessInstanceService processInstanceService;
+  @Autowired
+  private RuntimeService runtimeService;
+
+
   private RestTemplate restTemplate = new RestTemplate();
 
   public ProcessInstanceRepresentation startNewProcessInstance(CreateProcessInstanceRepresentation startRequest) {
@@ -125,7 +131,8 @@ public abstract class AbstractProcessInstancesResource {
         user = cachedUser.getUser();
       }
     }
-    return new ProcessInstanceRepresentation(historicProcess, processDefinition, ((ProcessDefinitionEntity) processDefinition).isGraphicalNotationDefined(), user);
+    ProcessInstanceRepresentation processInstanceRepresentation = new ProcessInstanceRepresentation(historicProcess, processDefinition, ((ProcessDefinitionEntity) processDefinition).isGraphicalNotationDefined(), user);
+    return processInstanceRepresentation;
 
   }
 
@@ -150,16 +157,4 @@ public abstract class AbstractProcessInstancesResource {
     RelatedContentRepresentation relatedContentResponse = new RelatedContentRepresentation(relatedContent, typeMapper);
     return relatedContentResponse;
   }
-
-  public void changeAssignee(String processInstanceId){
-    List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
-    for(Task task:tasks){
-     if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
-        taskService.setAssignee(task.getId(), KiteApiCallUtils.getAssignee());
-      }
-      KiteApiCallUtils.sendWxMsg(task);
-      KiteApiCallUtils.sendEmail(task);
-    }
-  }
-
 }

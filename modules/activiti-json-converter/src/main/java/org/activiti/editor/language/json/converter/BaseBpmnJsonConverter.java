@@ -336,6 +336,14 @@ public abstract class BaseBpmnJsonConverter implements EditorJsonConstants, Sten
           multiInstanceObject.setElementVariable("assignee");
           activity.setLoopCharacteristics(multiInstanceObject);
         }
+        boolean willitserial = getPropertyValueAsBoolean(PROPERTY_WILLISERIAL_CONDITION, elementNode);
+        if(willitserial){
+          MultiInstanceLoopCharacteristics multiInstanceObject = new MultiInstanceLoopCharacteristics();
+          multiInstanceObject.setSequential(true);
+          multiInstanceObject.setInputDataItem("${assigneeList}");
+          multiInstanceObject.setElementVariable("assignee");
+          activity.setLoopCharacteristics(multiInstanceObject);
+        }
 
       } else if (baseElement instanceof Gateway) {
         JsonNode flowOrderNode = getProperty(PROPERTY_SEQUENCEFLOW_ORDER, elementNode);

@@ -16,6 +16,7 @@ import java.util.List;
 
 import org.activiti.app.model.runtime.CompleteFormRepresentation;
 import org.activiti.app.model.runtime.ProcessInstanceVariableRepresentation;
+import org.activiti.app.rest.entity.ResultMsg;
 import org.activiti.app.service.editor.ActivitiTaskFormService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.task.Task;
@@ -50,9 +51,25 @@ public class TaskFormResource {
   @ResponseStatus(value = HttpStatus.OK)
   @RequestMapping(value = "/{taskId}", method = RequestMethod.POST, produces = "application/json")
   public void completeTaskForm(@PathVariable String taskId, @RequestBody CompleteFormRepresentation completeTaskFormRepresentation) {
-    Task task = (Task)((TaskQuery)this.taskService.createTaskQuery().taskId(taskId)).singleResult();
+   // Task task = (Task)((TaskQuery)this.taskService.createTaskQuery().taskId(taskId)).singleResult();
     taskFormService.completeTaskForm(taskId, completeTaskFormRepresentation);
-    taskFormService.changeAssignee(task.getExecutionId(),task.getProcessInstanceId());
+    //taskFormService.changeAssignee(task.getExecutionId(),task.getProcessInstanceId());
+  }
+
+  @ResponseStatus(value = HttpStatus.OK)
+  @RequestMapping(value = "/my/{taskId}", method = RequestMethod.POST, produces = "application/json")
+  public ResultMsg completeMyTaskForm(@PathVariable String taskId, @RequestBody CompleteFormRepresentation completeTaskFormRepresentation) {
+    ResultMsg msg = new ResultMsg();
+    try {
+      taskFormService.completeTaskForm(taskId, completeTaskFormRepresentation);
+      msg.setErrorCode(0);
+      msg.setErrorMsg("执行成功！");
+    } catch (Exception e) {
+      msg.setErrorCode(-1);
+      msg.setErrorMsg("流程发出失败："+e.getMessage());
+      e.printStackTrace();
+    }
+    return msg;
   }
 
   @RequestMapping(value = "/{taskId}/variables", method = RequestMethod.GET, produces = "application/json")

@@ -46,6 +46,10 @@ public class ProcessInstanceRepresentation extends AbstractRepresentation {
     protected String processDefinitionDeploymentId;
     protected boolean graphicalNotationDefined;
     protected boolean startFormDefined;
+    /**自定义字段 错误码*/
+    private int errorCode;
+    /**自定义字段 错误信息*/
+    private String errorMsg;
     
     protected List<RestVariable> variables = new ArrayList<RestVariable>();
 
@@ -231,5 +235,21 @@ public class ProcessInstanceRepresentation extends AbstractRepresentation {
 
     public void setStartFormDefined(boolean startFormDefined) {
         this.startFormDefined = startFormDefined;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(int errorCode) {
+        this.errorCode = errorCode;
+    }
+
+    public String getErrorMsg() {
+        return errorMsg;
+    }
+
+    public void setErrorMsg(String errorMsg) {
+        this.errorMsg = errorMsg;
     }
 }
