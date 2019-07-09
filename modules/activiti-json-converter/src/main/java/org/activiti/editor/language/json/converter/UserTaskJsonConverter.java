@@ -366,6 +366,12 @@ public class UserTaskJsonConverter extends BaseBpmnJsonConverter implements Form
         }
       }
     }
+    boolean willitsign = getPropertyValueAsBoolean("willitsign", elementNode);
+    boolean willitserial = getPropertyValueAsBoolean("willitserial", elementNode);
+   if(willitsign || willitserial){
+     task.setAssignee("${assignee}");
+     addExtensionElement("activiti-idm-initiator", String.valueOf(true), task);
+   }
     convertJsonToFormProperties(elementNode, task);
     return task;
   }

@@ -77,8 +77,8 @@ public class ActivitiService {
                         throw new MyTaskException("上级领导未找到");
                     }else{
                         taskService.setAssignee(task.getId(),assignee);
-                        KiteApiCallUtils.sendWxMsg(task);
-                        KiteApiCallUtils.sendEmail(task);
+                       /* KiteApiCallUtils.sendWxMsg(task);
+                        KiteApiCallUtils.sendEmail(task);*/
                     }
                 }else{
                     throw new MyTaskException("上级领导未找到");
