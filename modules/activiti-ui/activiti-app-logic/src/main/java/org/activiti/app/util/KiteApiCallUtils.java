@@ -22,15 +22,16 @@ import java.util.Map;
 public class KiteApiCallUtils {
 
     private static RestTemplate restTemplate = new RestTemplate();
-    private static String GET_ASSIGNEE_URL="http://localhost:8080/api/kite/getUpClassInfo/%s";
+    private static String GET_UPLEADER_URL="http://localhost:8080/api/kite/getUpClassInfo/%s";
+    private static String GET_DEPTLEADER_URL="http://localhost:8080/api/kite/getUpClassInfo/%s";
     private static String MEDIA_TYPE="application/json; charset=UTF-8";
     private static String WX_MSG_URL="http://localhost:8080/api/kite/notice";
     private static String EMAIL_MSG_URL="http://localhost:8080/api/kite/email";
     private static String CHECK_ADMIN_URL="http://localhost:8080/api/kite/checkAdmin/%s";
 
-    public static String getAssignee(){
+    public static String getUpLeader(){
         User currentUser = SecurityUtils.getCurrentUserObject();
-        String url = String.format(GET_ASSIGNEE_URL,currentUser.getId());
+        String url = String.format(GET_UPLEADER_URL,currentUser.getId());
         HttpHeaders headers = new HttpHeaders();
         MediaType type = MediaType.parseMediaType(MEDIA_TYPE);
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
@@ -40,6 +41,17 @@ public class KiteApiCallUtils {
         return  result.getBody();
     }
 
+    public static String getDeptLeader(){
+        User currentUser = SecurityUtils.getCurrentUserObject();
+        String url = String.format(GET_DEPTLEADER_URL,currentUser.getId());
+        HttpHeaders headers = new HttpHeaders();
+        MediaType type = MediaType.parseMediaType(MEDIA_TYPE);
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        headers.setContentType(type);
+        HttpEntity entity = new HttpEntity<>(null, headers);
+        HttpEntity<String> result = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+        return  result.getBody();
+    }
 
     public static String sendWxMsg(Task task){
         HttpEntity entity = getHttpEntity(task);

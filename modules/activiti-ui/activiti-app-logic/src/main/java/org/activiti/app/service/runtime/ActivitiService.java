@@ -70,8 +70,8 @@ public class ActivitiService {
     public void changeAssignee(String processInstanceId){
         List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
         for(Task task:tasks){
-            String assignee = KiteApiCallUtils.getAssignee();
             if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
+                String assignee = KiteApiCallUtils.getUpLeader();
                 if(StringUtils.isNotEmpty(assignee)){
                     if(assignee.contains("-1")){
                         throw new MyTaskException("上级领导未找到");
@@ -82,6 +82,19 @@ public class ActivitiService {
                     }
                 }else{
                     throw new MyTaskException("上级领导未找到");
+                }
+            }else if(task!=null && "deptleader".equalsIgnoreCase(task.getAssignee())){
+                String assignee = KiteApiCallUtils.getDeptLeader();
+                if(StringUtils.isNotEmpty(assignee)){
+                    if(assignee.contains("-1")){
+                        throw new MyTaskException("部门领导未找到");
+                    }else{
+                        taskService.setAssignee(task.getId(),assignee);
+                       /* KiteApiCallUtils.sendWxMsg(task);
+                        KiteApiCallUtils.sendEmail(task);*/
+                    }
+                }else{
+                    throw new MyTaskException("部门领导未找到");
                 }
             }
         }
