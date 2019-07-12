@@ -196,6 +196,7 @@ public class ModelServiceImpl implements ModelService {
     newModel.setLastUpdated(Calendar.getInstance().getTime());
     newModel.setLastUpdatedBy(createdBy.getId());
     newModel.setProcessType(model.getProcessType());
+    newModel.setJump(model.getJump());
     persistModel(newModel);
     return newModel;
   }

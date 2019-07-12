@@ -16,12 +16,15 @@ import java.util.*;
 
 import org.activiti.app.domain.runtime.RelatedContent;
 import org.activiti.app.model.component.SimpleContentTypeMapper;
+import org.activiti.app.model.runtime.CompleteFormRepresentation;
 import org.activiti.app.model.runtime.CreateProcessInstanceRepresentation;
 import org.activiti.app.model.runtime.ProcessInstanceRepresentation;
 import org.activiti.app.model.runtime.RelatedContentRepresentation;
+import org.activiti.app.security.SecurityUtils;
 import org.activiti.app.service.api.ModelService;
 import org.activiti.app.service.api.UserCache;
 import org.activiti.app.service.api.UserCache.CachedUser;
+import org.activiti.app.service.editor.ActivitiTaskFormService;
 import org.activiti.app.service.exception.BadRequestException;
 import org.activiti.app.service.runtime.ActivitiService;
 import org.activiti.app.service.runtime.PermissionService;
@@ -38,6 +41,7 @@ import org.activiti.engine.identity.User;
 import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
 import org.activiti.form.api.FormRepositoryService;
 import org.activiti.form.api.FormService;
 import org.activiti.form.model.FormDefinition;
@@ -76,20 +80,13 @@ public abstract class AbstractProcessInstancesResource {
 
   @Autowired
   protected UserCache userCache;
-
-  @Autowired
-  protected ObjectMapper objectMapper;
   @Autowired
   private TaskService taskService;
   @Autowired
-  private ModelService modelService;
+  protected ObjectMapper objectMapper;
   @Autowired
-  private ProcessInstanceService processInstanceService;
-  @Autowired
-  private RuntimeService runtimeService;
+  private ActivitiTaskFormService activitiTaskFormService;
 
-
-  private RestTemplate restTemplate = new RestTemplate();
 
   public ProcessInstanceRepresentation startNewProcessInstance(CreateProcessInstanceRepresentation startRequest) {
     if (StringUtils.isEmpty(startRequest.getProcessDefinitionId())) {
@@ -132,8 +129,28 @@ public abstract class AbstractProcessInstancesResource {
       }
     }
     ProcessInstanceRepresentation processInstanceRepresentation = new ProcessInstanceRepresentation(historicProcess, processDefinition, ((ProcessDefinitionEntity) processDefinition).isGraphicalNotationDefined(), user);
+
+    completeTaskForm(processInstance.getId());
+
+
     return processInstanceRepresentation;
 
+  }
+  protected void completeTaskForm(String processInstanceId){
+    User currentUser = SecurityUtils.getCurrentUserObject();
+    List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
+    for(Task task:tasks){
+      if(task.getAssignee().equals(currentUser.getId())){
+        FormDefinition form = activitiTaskFormService.getTaskForm(task.getId());
+        CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
+        completeFormRepresentation.setFormId(form.getId());
+        Map<String, Object> values = new HashMap<>();
+        values.put("applyResult","同意");
+        values.put("applyRemarks","通过");
+        completeFormRepresentation.setValues(values);
+        activitiTaskFormService.completeTaskForm(task.getId(),completeFormRepresentation);
+      }
+    }
   }
 
 

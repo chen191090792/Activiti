@@ -66,8 +66,10 @@ public class AppDefinitionResource {
   public AppDefinitionRepresentation getAppDefinition(@PathVariable("modelId") String modelId) {
     Model model = modelService.getModel(modelId);
     String processType = model.getProcessType();
+    String jump = model.getJump();
     AppDefinitionRepresentation appDefinitionRepresentation = createAppDefinitionRepresentation(model);
     appDefinitionRepresentation.setProcessType(processType);
+    appDefinitionRepresentation.setJump(jump);
     return appDefinitionRepresentation;
   }
 
@@ -90,6 +92,7 @@ public class AppDefinitionResource {
     model.setKey(updatedModel.getAppDefinition().getKey());
     model.setDescription(updatedModel.getAppDefinition().getDescription());
     model.setProcessType(updatedModel.getAppDefinition().getProcessType());
+    model.setJump(updatedModel.getAppDefinition().getJump());
     String editorJson = null;
     try {
       editorJson = objectMapper.writeValueAsString(updatedModel.getAppDefinition().getDefinition());

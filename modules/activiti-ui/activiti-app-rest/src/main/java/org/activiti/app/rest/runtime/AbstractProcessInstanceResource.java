@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class AbstractProcessInstanceResource {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractProcessInstanceResource.class);
+  private static final String ROLE_VALUE = "admin";
 
   @Autowired
   protected RepositoryService repositoryService;
@@ -76,6 +77,35 @@ public abstract class AbstractProcessInstanceResource {
       throw new NotFoundException("Process with id: " + processInstanceId + " does not exist or is not available for this user");
     }
 
+    ProcessDefinitionEntity processDefinition = (ProcessDefinitionEntity) repositoryService.getProcessDefinition(processInstance.getProcessDefinitionId());
+
+    User userRep = null;
+    if (processInstance.getStartUserId() != null) {
+      CachedUser user = userCache.getUser(processInstance.getStartUserId());
+      if (user != null && user.getUser() != null) {
+        userRep = user.getUser();
+      }
+    }
+
+    ProcessInstanceRepresentation processInstanceResult = new ProcessInstanceRepresentation(processInstance, processDefinition, processDefinition.isGraphicalNotationDefined(), userRep);
+
+    FormDefinition formDefinition = getStartFormDefinition(processInstance.getProcessDefinitionId(), processDefinition, processInstance.getId());
+    if (formDefinition != null) {
+      processInstanceResult.setStartFormDefined(true);
+    }
+
+    return processInstanceResult;
+  }
+
+  public ProcessInstanceRepresentation getMyProcessInstance(String processInstanceId,String role, HttpServletResponse response) {
+
+    HistoricProcessInstance processInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+
+    if(!ROLE_VALUE.equals(role)){
+      if (!permissionService.hasReadPermissionOnProcessInstance(SecurityUtils.getCurrentUserObject(), processInstance, processInstanceId)) {
+        throw new NotFoundException("Process with id: " + processInstanceId + " does not exist or is not available for this user");
+      }
+    }
     ProcessDefinitionEntity processDefinition = (ProcessDefinitionEntity) repositoryService.getProcessDefinition(processInstance.getProcessDefinitionId());
 
     User userRep = null;

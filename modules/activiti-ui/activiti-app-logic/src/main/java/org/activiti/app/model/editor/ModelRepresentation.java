@@ -38,6 +38,15 @@ public class ModelRepresentation extends AbstractRepresentation {
   protected String comment;
   protected Integer modelType;
   private String processType;
+  private String jump;
+
+  public String getJump() {
+    return jump;
+  }
+
+  public void setJump(String jump) {
+    this.jump = jump;
+  }
 
   public ModelRepresentation(AbstractModel model) {
     initialize(model);

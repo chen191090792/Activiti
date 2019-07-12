@@ -22,16 +22,15 @@ import java.util.Map;
 public class KiteApiCallUtils {
 
     private static RestTemplate restTemplate = new RestTemplate();
-    private static String GET_UPLEADER_URL="http://localhost:8080/api/kite/getUpClassInfo/%s";
-    private static String GET_DEPTLEADER_URL="http://localhost:8080/api/kite/getUpClassInfo/%s";
+    private static String GET_UPLEADER_URL="http://test1.wxchina.com:16032/api/kite/getUpClassInfo/%s";
+    private static String GET_DEPTLEADER_URL="http://test1.wxchina.com:16032/api/kite/getDeptleaderInfo/%s";
     private static String MEDIA_TYPE="application/json; charset=UTF-8";
-    private static String WX_MSG_URL="http://localhost:8080/api/kite/notice";
-    private static String EMAIL_MSG_URL="http://localhost:8080/api/kite/email";
-    private static String CHECK_ADMIN_URL="http://localhost:8080/api/kite/checkAdmin/%s";
+    private static String WX_MSG_URL="http://test1.wxchina.com:16032/api/kite/notice";
+    private static String EMAIL_MSG_URL="http://test1.wxchina.com:16032/api/kite/email";
+    private static String CHECK_ADMIN_URL="http://test1.wxchina.com:16032/api/kite/checkAdmin/%s";
 
-    public static String getUpLeader(){
-        User currentUser = SecurityUtils.getCurrentUserObject();
-        String url = String.format(GET_UPLEADER_URL,currentUser.getId());
+    public static String getUpLeader(String startById){
+        String url = String.format(GET_UPLEADER_URL,startById);
         HttpHeaders headers = new HttpHeaders();
         MediaType type = MediaType.parseMediaType(MEDIA_TYPE);
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
@@ -41,9 +40,8 @@ public class KiteApiCallUtils {
         return  result.getBody();
     }
 
-    public static String getDeptLeader(){
-        User currentUser = SecurityUtils.getCurrentUserObject();
-        String url = String.format(GET_DEPTLEADER_URL,currentUser.getId());
+    public static String getDeptLeader(String startById){
+        String url = String.format(GET_DEPTLEADER_URL,startById);
         HttpHeaders headers = new HttpHeaders();
         MediaType type = MediaType.parseMediaType(MEDIA_TYPE);
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));

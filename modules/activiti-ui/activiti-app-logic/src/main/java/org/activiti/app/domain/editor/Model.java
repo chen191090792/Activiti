@@ -24,6 +24,8 @@ public class Model extends AbstractModel {
 	private byte[] thumbnail;
     @Column(name = "process_type")
     private String processType;
+	@Column(name = "jump")
+	private String jump;
 	
 	public Model() {
 		super();
@@ -43,5 +45,13 @@ public class Model extends AbstractModel {
 
 	public void setProcessType(String processType) {
 		this.processType = processType;
+	}
+
+	public String getJump() {
+		return jump;
+	}
+
+	public void setJump(String jump) {
+		this.jump = jump;
 	}
 }

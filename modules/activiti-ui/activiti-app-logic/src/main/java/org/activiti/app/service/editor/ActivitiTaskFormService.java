@@ -22,14 +22,12 @@ import org.activiti.app.service.exception.NotFoundException;
 import org.activiti.app.service.exception.NotPermittedException;
 import org.activiti.app.service.runtime.PermissionService;
 import org.activiti.app.util.KiteApiCallUtils;
-import org.activiti.engine.ActivitiException;
-import org.activiti.engine.HistoryService;
-import org.activiti.engine.RepositoryService;
-import org.activiti.engine.TaskService;
+import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.history.HistoricVariableInstance;
 import org.activiti.engine.identity.User;
 import org.activiti.engine.repository.ProcessDefinition;
+import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
 import org.activiti.form.api.FormRepositoryService;
 import org.activiti.form.api.FormService;
@@ -72,6 +70,8 @@ public class ActivitiTaskFormService {
 
   @Autowired
   protected ObjectMapper objectMapper;
+  @Autowired
+  private RuntimeService runtimeService;
 
   private RestTemplate restTemplate = new RestTemplate();
 
@@ -141,8 +141,45 @@ public class ActivitiTaskFormService {
     formService.storeSubmittedForm(variables, formDefinition, task.getId(), task.getProcessInstanceId());
     taskService.complete(taskId, variables);
     changeAssignee(task.getExecutionId(),task.getProcessInstanceId());
+    completeTaskForm(task.getProcessInstanceId());
   }
-  
+
+  protected void completeTaskForm(String processInstanceId){
+    User currentUser = SecurityUtils.getCurrentUserObject();
+    List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
+    ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+    for(Task task:tasks){
+      if(task.getAssignee().equals(currentUser.getId()) || task.getAssignee().equals(processInstance.getStartUserId())){
+        FormDefinition form = this.getTaskForm(task.getId());
+        CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
+        completeFormRepresentation.setFormId(form.getId());
+        Map<String, Object> values = new HashMap<>();
+        values.put("applyResult","同意");
+        values.put("applyRemarks","通过");
+        completeFormRepresentation.setValues(values);
+        this.myCompleteTaskForm(task.getId(),completeFormRepresentation);
+      }
+    }
+  }
+
+
+  @Transactional
+  public void myCompleteTaskForm(String taskId, CompleteFormRepresentation completeTaskFormRepresentation) {
+
+    // Get the form definition
+    Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
+    if (task == null) {
+      throw new NotFoundException("Task not found with id: " + taskId);
+    }
+    FormDefinition formDefinition = formRepositoryService.getFormDefinitionById(completeTaskFormRepresentation.getFormId());
+    // Extract raw variables and complete the task
+    Map<String, Object> variables = formService.getVariablesFromFormSubmission(formDefinition, completeTaskFormRepresentation.getValues(),
+            completeTaskFormRepresentation.getOutcome());
+    formService.storeSubmittedForm(variables, formDefinition, task.getId(), task.getProcessInstanceId());
+    taskService.complete(taskId, variables);
+  }
+
+
   public List<ProcessInstanceVariableRepresentation> getProcessInstanceVariables(String taskId) {
     HistoricTaskInstance task = permissionService.validateReadPermissionOnTask(SecurityUtils.getCurrentUserObject(), taskId);
     List<HistoricVariableInstance> historicVariables = historyService.createHistoricVariableInstanceQuery().processInstanceId(task.getProcessInstanceId()).list();
@@ -162,10 +199,11 @@ public class ActivitiTaskFormService {
   }
 
   public void changeAssignee(String executionId, String processId) {
+    ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processId).singleResult();
     List<Task> tasks = taskService.createTaskQuery().executionId(executionId).processInstanceId(processId).listPage(0,100000);
     for(Task task:tasks){
       if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
-        String assignee = KiteApiCallUtils.getUpLeader();
+        String assignee = KiteApiCallUtils.getUpLeader(processInstance.getStartUserId());
         if(StringUtils.isNotEmpty(assignee)){
           if(assignee.contains("-1")){
             throw new MyTaskException("上级领导未找到");
@@ -178,7 +216,7 @@ public class ActivitiTaskFormService {
           throw new MyTaskException("上级领导未找到");
         }
       }else if(task!=null && "deptleader".equalsIgnoreCase(task.getAssignee())){
-        String assignee = KiteApiCallUtils.getDeptLeader();
+        String assignee = KiteApiCallUtils.getDeptLeader(processInstance.getStartUserId());
         if(StringUtils.isNotEmpty(assignee)){
           if(assignee.contains("-1")){
             throw new MyTaskException("部门领导未找到");
