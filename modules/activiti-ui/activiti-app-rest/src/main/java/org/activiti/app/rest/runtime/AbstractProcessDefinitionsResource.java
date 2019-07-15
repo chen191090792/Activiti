@@ -97,6 +97,7 @@ public abstract class AbstractProcessDefinitionsResource {
         }
         Deployment deployment = (Deployment)this.repositoryService.createDeploymentQuery().deploymentId(processDefinition.getDeploymentId()).singleResult();
         String processType ="";
+        String jump="";
         if(deployment!=null){
           List<AbstractModel> modelsByModelType = modelService.getModelsByModelType(3);
           for(AbstractModel abstractModel:modelsByModelType){
@@ -105,13 +106,14 @@ public abstract class AbstractProcessDefinitionsResource {
               if(StringUtils.isNotEmpty(abstractModel.getId())){
                 Model model = modelService.getModel(abstractModel.getId());
                 processType = model.getProcessType();
+                jump = model.getJump();
               }
             }
           }
         }
-
         ProcessDefinitionRepresentation rep = new ProcessDefinitionRepresentation(processDefinition);
         rep.setProcessType(processType);
+        rep.setJump(jump);
         rep.setHasStartForm(startFormMap.get(processDefinition.getId()));
         result.add(rep);
       }
