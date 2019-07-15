@@ -1,4 +1,4 @@
-package org.activiti.app.rest.utils;
+package org.activiti.app.service.util;
 
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;

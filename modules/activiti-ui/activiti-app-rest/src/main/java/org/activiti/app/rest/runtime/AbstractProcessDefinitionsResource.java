@@ -24,6 +24,7 @@ import org.activiti.app.model.runtime.ProcessDefinitionRepresentation;
 import org.activiti.app.service.api.ModelService;
 import org.activiti.app.service.editor.ModelServiceImpl;
 import org.activiti.app.service.runtime.PermissionService;
+import org.activiti.app.service.util.JedisUtils;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.StartEvent;
 import org.activiti.editor.language.json.converter.util.CollectionUtils;
@@ -35,6 +36,7 @@ import org.activiti.form.api.FormRepositoryService;
 import org.activiti.form.model.FormDefinition;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import redis.clients.jedis.JedisCluster;
 
 public abstract class AbstractProcessDefinitionsResource {
 
@@ -114,6 +116,8 @@ public abstract class AbstractProcessDefinitionsResource {
         ProcessDefinitionRepresentation rep = new ProcessDefinitionRepresentation(processDefinition);
         rep.setProcessType(processType);
         rep.setJump(jump);
+        JedisCluster jedisCluser = JedisUtils.getJedisCluser();
+        jedisCluser.set(processDefinition.getId(),jump);
         rep.setHasStartForm(startFormMap.get(processDefinition.getId()));
         result.add(rep);
       }

@@ -30,6 +30,7 @@ import org.activiti.app.service.runtime.ActivitiService;
 import org.activiti.app.service.runtime.PermissionService;
 import org.activiti.app.service.runtime.ProcessInstanceService;
 import org.activiti.app.service.runtime.RelatedContentService;
+import org.activiti.app.service.util.JedisUtils;
 import org.activiti.bpmn.model.*;
 import org.activiti.bpmn.model.Process;
 import org.activiti.engine.HistoryService;
@@ -51,6 +52,7 @@ import org.springframework.data.domain.Page;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.client.RestTemplate;
+import redis.clients.jedis.JedisCluster;
 
 public abstract class AbstractProcessInstancesResource {
 
@@ -130,9 +132,11 @@ public abstract class AbstractProcessInstancesResource {
     }
     ProcessInstanceRepresentation processInstanceRepresentation = new ProcessInstanceRepresentation(historicProcess, processDefinition, ((ProcessDefinitionEntity) processDefinition).isGraphicalNotationDefined(), user);
 
-    completeTaskForm(processInstance.getId());
-
-
+    JedisCluster jedisCluser = JedisUtils.getJedisCluser();
+    String jump = jedisCluser.get(processDefinition.getId());
+    if(StringUtils.equalsIgnoreCase("是",jump)){
+      completeTaskForm(processInstance.getId());
+    }
     return processInstanceRepresentation;
 
   }

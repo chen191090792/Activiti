@@ -21,6 +21,7 @@ import org.activiti.app.service.exception.MyTaskException;
 import org.activiti.app.service.exception.NotFoundException;
 import org.activiti.app.service.exception.NotPermittedException;
 import org.activiti.app.service.runtime.PermissionService;
+import org.activiti.app.service.util.JedisUtils;
 import org.activiti.app.util.KiteApiCallUtils;
 import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricTaskInstance;
@@ -41,6 +42,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import redis.clients.jedis.JedisCluster;
 
 /**
  * @author Tijs Rademakers
@@ -148,16 +150,21 @@ public class ActivitiTaskFormService {
     User currentUser = SecurityUtils.getCurrentUserObject();
     List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
     ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
-    for(Task task:tasks){
-      if(task.getAssignee().equals(currentUser.getId()) || task.getAssignee().equals(processInstance.getStartUserId())){
-        FormDefinition form = this.getTaskForm(task.getId());
-        CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
-        completeFormRepresentation.setFormId(form.getId());
-        Map<String, Object> values = new HashMap<>();
-        values.put("applyResult","同意");
-        values.put("applyRemarks","通过");
-        completeFormRepresentation.setValues(values);
-        this.myCompleteTaskForm(task.getId(),completeFormRepresentation);
+
+    JedisCluster jedisCluser = JedisUtils.getJedisCluser();
+    String jump = jedisCluser.get(processInstance.getProcessDefinitionId());
+    if(StringUtils.equalsIgnoreCase("是",jump)){
+      for(Task task:tasks){
+        if(task.getAssignee().equals(currentUser.getId()) || task.getAssignee().equals(processInstance.getStartUserId())){
+          FormDefinition form = this.getTaskForm(task.getId());
+          CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
+          completeFormRepresentation.setFormId(form.getId());
+          Map<String, Object> values = new HashMap<>();
+          values.put("applyResult","同意");
+          values.put("applyRemarks","通过");
+          completeFormRepresentation.setValues(values);
+          this.myCompleteTaskForm(task.getId(),completeFormRepresentation);
+        }
       }
     }
   }
