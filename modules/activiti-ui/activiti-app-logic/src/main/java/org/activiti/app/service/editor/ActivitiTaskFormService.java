@@ -151,23 +151,25 @@ public class ActivitiTaskFormService {
     User currentUser = SecurityUtils.getCurrentUserObject();
     List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
     ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
-
-    JedisCluster jedisCluser = JedisUtils.getJedisCluser();
-    String jump = jedisCluser.get(processInstance.getProcessDefinitionId());
-    if(StringUtils.equalsIgnoreCase("是",jump)){
-      for(Task task:tasks){
-        if(task.getAssignee().equals(currentUser.getId()) || task.getAssignee().equals(processInstance.getStartUserId())){
-          FormDefinition form = this.getTaskForm(task.getId());
-          CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
-          completeFormRepresentation.setFormId(form.getId());
-          Map<String, Object> values = new HashMap<>();
-          values.put("applyResult","同意");
-          values.put("applyRemarks","通过");
-          completeFormRepresentation.setValues(values);
-          this.myCompleteTaskForm(task.getId(),completeFormRepresentation);
+    if(processInstance!=null){
+      JedisCluster jedisCluser = JedisUtils.getJedisCluser();
+      String jump = jedisCluser.get(processInstance.getProcessDefinitionId());
+      if(StringUtils.equalsIgnoreCase("是",jump)){
+        for(Task task:tasks){
+          if(task.getAssignee().equals(currentUser.getId()) || task.getAssignee().equals(processInstance.getStartUserId())){
+            FormDefinition form = this.getTaskForm(task.getId());
+            CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
+            completeFormRepresentation.setFormId(form.getId());
+            Map<String, Object> values = new HashMap<>();
+            values.put("applyResult","同意");
+            values.put("applyRemarks","通过");
+            completeFormRepresentation.setValues(values);
+            this.myCompleteTaskForm(task.getId(),completeFormRepresentation);
+          }
         }
       }
     }
+
   }
 
 
