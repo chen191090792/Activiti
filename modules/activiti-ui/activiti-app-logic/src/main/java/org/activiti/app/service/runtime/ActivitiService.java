@@ -21,6 +21,7 @@ import org.activiti.app.security.SecurityUtils;
 import org.activiti.app.service.api.ModelService;
 import org.activiti.app.service.exception.MyTaskException;
 import org.activiti.app.service.exception.NotFoundException;
+import org.activiti.app.service.util.TaskAssigneeSetUtils;
 import org.activiti.app.util.KiteApiCallUtils;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RuntimeService;
@@ -70,40 +71,6 @@ public class ActivitiService {
     public void changeAssignee(String processInstanceId){
         ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
         List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
-        for(Task task:tasks){
-            if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
-                String assignee = KiteApiCallUtils.getUpLeader(processInstance.getStartUserId());
-                if(StringUtils.isNotEmpty(assignee)){
-                    if(assignee.contains("-1")){
-                        throw new MyTaskException("上级领导未找到");
-                    }else{
-                        taskService.setAssignee(task.getId(),assignee);
-                       /* KiteApiCallUtils.sendWxMsg(task);
-                        KiteApiCallUtils.sendEmail(task);*/
-                    }
-                }else{
-                    throw new MyTaskException("上级领导未找到");
-                }
-            }else if(task!=null && "deptleader".equalsIgnoreCase(task.getAssignee())){
-                String assignee = KiteApiCallUtils.getDeptLeader(processInstance.getStartUserId());
-                if(StringUtils.isNotEmpty(assignee)){
-                    if(assignee.contains("-1")){
-                        throw new MyTaskException("部门领导未找到");
-                    }else{
-                        taskService.setAssignee(task.getId(),assignee);
-                       /* KiteApiCallUtils.sendWxMsg(task);
-                        KiteApiCallUtils.sendEmail(task);*/
-                       /* if(assignee.equals(currentUser.getId())){
-                            Map<String, Object> variables = new HashMap<>();
-                            variables.put("applyResult","同意");
-                            variables.put("applyRemarks","通过");
-                            taskService.complete(task.getId(),variables);
-                        }*/
-                    }
-                }else{
-                    throw new MyTaskException("部门领导未找到");
-                }
-            }
-        }
+        TaskAssigneeSetUtils.setAssignee(tasks,processInstance,taskService);
     }
 }

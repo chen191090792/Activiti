@@ -99,7 +99,6 @@ public abstract class AbstractTaskQueryResource {
     } else {
       taskInfoQueryWrapper = new TaskInfoQueryWrapper(taskService.createTaskQuery());
     }
-
     JsonNode deploymentKeyNode = requestNode.get("deploymentKey");
     if (deploymentKeyNode != null && deploymentKeyNode.isNull() == false) {
       List<Deployment> deployments = repositoryService.createDeploymentQuery().deploymentKey(deploymentKeyNode.asText()).list();
@@ -107,7 +106,6 @@ public abstract class AbstractTaskQueryResource {
       for (Deployment deployment : deployments) {
         deploymentIds.add(deployment.getId());
       }
-      
       taskInfoQueryWrapper.getTaskInfoQuery().or()
         .deploymentIdIn(deploymentIds)
         .taskCategory(deploymentKeyNode.asText())

@@ -22,6 +22,7 @@ import org.activiti.app.service.exception.NotFoundException;
 import org.activiti.app.service.exception.NotPermittedException;
 import org.activiti.app.service.runtime.PermissionService;
 import org.activiti.app.service.util.JedisUtils;
+import org.activiti.app.service.util.TaskAssigneeSetUtils;
 import org.activiti.app.util.KiteApiCallUtils;
 import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricTaskInstance;
@@ -208,35 +209,7 @@ public class ActivitiTaskFormService {
   public void changeAssignee(String executionId, String processId) {
     ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processId).singleResult();
     List<Task> tasks = taskService.createTaskQuery().executionId(executionId).processInstanceId(processId).listPage(0,100000);
-    for(Task task:tasks){
-      if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
-        String assignee = KiteApiCallUtils.getUpLeader(processInstance.getStartUserId());
-        if(StringUtils.isNotEmpty(assignee)){
-          if(assignee.contains("-1")){
-            throw new MyTaskException("上级领导未找到");
-          }else{
-            taskService.setAssignee(task.getId(),assignee);
-          /*  KiteApiCallUtils.sendWxMsg(task);
-            KiteApiCallUtils.sendEmail(task);*/
-          }
-        }else{
-          throw new MyTaskException("上级领导未找到");
-        }
-      }else if(task!=null && "deptleader".equalsIgnoreCase(task.getAssignee())){
-        String assignee = KiteApiCallUtils.getDeptLeader(processInstance.getStartUserId());
-        if(StringUtils.isNotEmpty(assignee)){
-          if(assignee.contains("-1")){
-            throw new MyTaskException("部门领导未找到");
-          }else{
-            taskService.setAssignee(task.getId(),assignee);
-               /* KiteApiCallUtils.sendWxMsg(task);
-                KiteApiCallUtils.sendEmail(task);*/
-          }
-        }else{
-          throw new MyTaskException("部门领导未找到");
-        }
-      }
-    }
+    TaskAssigneeSetUtils.setAssignee(tasks,processInstance,taskService);
   }
 
 
