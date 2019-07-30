@@ -141,6 +141,7 @@ public class ActivitiTaskFormService {
     // Extract raw variables and complete the task
     Map<String, Object> variables = formService.getVariablesFromFormSubmission(formDefinition, completeTaskFormRepresentation.getValues(),
         completeTaskFormRepresentation.getOutcome());
+    //variables.put("assigneeList",  Arrays.asList("15915810133","15999947554"));
     formService.storeSubmittedForm(variables, formDefinition, task.getId(), task.getProcessInstanceId());
     taskService.complete(taskId, variables);
     changeAssignee(task.getExecutionId(),task.getProcessInstanceId());

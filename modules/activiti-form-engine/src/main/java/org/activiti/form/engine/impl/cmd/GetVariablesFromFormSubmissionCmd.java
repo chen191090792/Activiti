@@ -14,6 +14,7 @@ package org.activiti.form.engine.impl.cmd;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -146,7 +147,9 @@ public class GetVariablesFromFormSubmissionCmd implements Command<Map<String, Ob
           // Wrong type, ignore
           result = null;
         }
-      } else {
+      } else if(formFieldValue!=null && formFieldValue instanceof String){
+        result = Arrays.asList(formFieldValue);
+      }else {
         // Incorrect or empty map, ignore
         result = null;
       }
