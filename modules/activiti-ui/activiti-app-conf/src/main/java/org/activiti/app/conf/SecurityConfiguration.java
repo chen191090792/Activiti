@@ -20,7 +20,6 @@ import org.activiti.app.security.AjaxLogoutSuccessHandler;
 import org.activiti.app.security.CustomDaoAuthenticationProvider;
 import org.activiti.app.security.CustomPersistentRememberMeServices;
 import org.activiti.app.security.Http401UnauthorizedEntryPoint;
-import org.activiti.app.utils.Md5PasswordEncoder;
 import org.activiti.app.web.CustomFormLoginConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +40,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.MessageDigestPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -51,178 +48,177 @@ import org.springframework.security.web.header.writers.XXssProtectionHeaderWrite
 
 /**
  * Based on http://docs.spring.io/spring-security/site/docs/3.2.x/reference/htmlsingle/#multiple-httpsecurity
- *
+ * 
  * @author Joram Barrez
  */
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, jsr250Enabled = true)
 public class SecurityConfiguration {
-
-    private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
-
-    public static final String KEY_LDAP_ENABLED = "ldap.authentication.enabled";
-
-    //
-    // GLOBAL CONFIG
-    //
-
-    @Autowired
-    private Environment env;
-
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) {
-
-        // Default auth (database backed)
-        try {
-            auth.authenticationProvider(dbAuthenticationProvider());
-        } catch (Exception e) {
-            logger.error("Could not configure authentication mechanism:", e);
-        }
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        org.activiti.app.security.UserDetailsService userDetailsService = new org.activiti.app.security.UserDetailsService();
-
-        // Undocumented setting to configure the amount of time user data is cached before a new check for validity is made
-        // Use <= 0 for always do a check
-        userDetailsService.setUserValidityPeriod(env.getProperty("cache.users.recheck.period", Long.class, 30000L));
-
-        return userDetailsService;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        //return NoOpPasswordEncoder.getInstance();
-        return new MessageDigestPasswordEncoder("MD5");
-    }
-
-    @Bean(name = "dbAuthenticationProvider")
-    public AuthenticationProvider dbAuthenticationProvider() {
-        CustomDaoAuthenticationProvider daoAuthenticationProvider = new CustomDaoAuthenticationProvider();
-        daoAuthenticationProvider.setUserDetailsService(userDetailsService());
-        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
-        return daoAuthenticationProvider;
-    }
+	
+	private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
+	
+	public static final String KEY_LDAP_ENABLED = "ldap.authentication.enabled";
 
     //
-    // REGULAR WEBAP CONFIG
-    //
+	// GLOBAL CONFIG
+	//
 
-    @Configuration
-    @Order(10) // API config first (has Order(1))
+	@Autowired
+	private Environment env;
+
+	@Autowired
+	public void configureGlobal(AuthenticationManagerBuilder auth) {
+
+		// Default auth (database backed)
+		try {
+			auth.authenticationProvider(dbAuthenticationProvider());
+		} catch (Exception e) {
+			logger.error("Could not configure authentication mechanism:", e);
+		}
+	}
+
+	@Bean
+	public UserDetailsService userDetailsService() {
+		org.activiti.app.security.UserDetailsService userDetailsService = new org.activiti.app.security.UserDetailsService();
+
+		// Undocumented setting to configure the amount of time user data is cached before a new check for validity is made
+		// Use <= 0 for always do a check
+		userDetailsService.setUserValidityPeriod(env.getProperty("cache.users.recheck.period", Long.class, 30000L));
+
+		return userDetailsService;
+	}
+
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new MessageDigestPasswordEncoder("MD5");
+	}
+	
+	@Bean(name = "dbAuthenticationProvider")
+	public AuthenticationProvider dbAuthenticationProvider() {
+		CustomDaoAuthenticationProvider daoAuthenticationProvider = new CustomDaoAuthenticationProvider();
+		daoAuthenticationProvider.setUserDetailsService(userDetailsService());
+		daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+		return daoAuthenticationProvider;
+	}
+	
+	//
+	// REGULAR WEBAP CONFIG
+	//
+	
+	@Configuration
+	@Order(10) // API config first (has Order(1))
     public static class FormLoginWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
 
-        private static final Logger logger = LoggerFactory.getLogger(FormLoginWebSecurityConfigurerAdapter.class);
+		private static final Logger logger = LoggerFactory.getLogger(FormLoginWebSecurityConfigurerAdapter.class);
+		
+	    @Inject
+	    private Environment env;
 
-        @Inject
-        private Environment env;
+	    @Inject
+	    private AjaxAuthenticationSuccessHandler ajaxAuthenticationSuccessHandler;
 
-        @Inject
-        private AjaxAuthenticationSuccessHandler ajaxAuthenticationSuccessHandler;
+	    @Inject
+	    private AjaxAuthenticationFailureHandler ajaxAuthenticationFailureHandler;
 
-        @Inject
-        private AjaxAuthenticationFailureHandler ajaxAuthenticationFailureHandler;
+	    @Inject
+	    private AjaxLogoutSuccessHandler ajaxLogoutSuccessHandler;
+	    
+	    @Inject
+	    private Http401UnauthorizedEntryPoint authenticationEntryPoint;
+	    
+	    @Override
+	    protected void configure(HttpSecurity http) throws Exception {
+	        http
+	            .exceptionHandling()
+	                .authenticationEntryPoint(authenticationEntryPoint) 
+	                .and()
+	            .sessionManagement()
+	                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+	                .and()
+	            .rememberMe()
+	                .rememberMeServices(rememberMeServices())
+	                .key(env.getProperty("appconf.security.rememberme.key"))
+	                .and()
+	            .logout()
+	                .logoutUrl("/app/logout")
+	                .logoutSuccessHandler(ajaxLogoutSuccessHandler)
+	                .deleteCookies("JSESSIONID")
+	                .permitAll()
+	                .and()
+	            .csrf()
+	                .disable() // Disabled, cause enabling it will cause sessions
+	            .headers()
+	                .frameOptions()
+	                	.sameOrigin()
+	                	.addHeaderWriter(new XXssProtectionHeaderWriter())
+	                .and()
+	            .authorizeRequests()
+	                .antMatchers("/*").permitAll()
+	                .antMatchers("/app/rest/authenticate").permitAll()
+	                .antMatchers("/app/rest/integration/login").permitAll()
+	                .antMatchers("/app/rest/temporary/example-options").permitAll()
+	                .antMatchers("/app/rest/idm/email-actions/*").permitAll()
+	                .antMatchers("/app/rest/idm/signups").permitAll()
+	                .antMatchers("/app/rest/idm/passwords").permitAll()
+					.antMatchers("/druid/**").authenticated()
+					.antMatchers("/actuator/**").authenticated()
+					.antMatchers("/manage/**").authenticated()
+	                .antMatchers("/app/**").authenticated();
 
-        @Inject
-        private AjaxLogoutSuccessHandler ajaxLogoutSuccessHandler;
+	        // Custom login form configurer to allow for non-standard HTTP-methods (eg. LOCK)
+	        CustomFormLoginConfig<HttpSecurity> loginConfig = new CustomFormLoginConfig<HttpSecurity>();
+	        loginConfig.loginProcessingUrl("/app/authentication")
+	            .successHandler(ajaxAuthenticationSuccessHandler)
+	            .failureHandler(ajaxAuthenticationFailureHandler)
+	            .usernameParameter("j_username")
+	            .passwordParameter("j_password")
+	            .permitAll();
+	        
+	        http.apply(loginConfig);
+	    }
 
-        @Inject
-        private Http401UnauthorizedEntryPoint authenticationEntryPoint;
+	    @Bean
+	    public RememberMeServices rememberMeServices() {
+	      return new CustomPersistentRememberMeServices(env, userDetailsService());
+	    }
+	    
+	    @Bean
+	    public RememberMeAuthenticationProvider rememberMeAuthenticationProvider() {
+	        return new RememberMeAuthenticationProvider(env.getProperty("appconf.security.rememberme.key"));
+	    }
+	}
 
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-            http
-                    .exceptionHandling()
-                    .authenticationEntryPoint(authenticationEntryPoint)
-                    .and()
-                    .sessionManagement()
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                    .and()
-                    .rememberMe()
-                    .rememberMeServices(rememberMeServices())
-                    .key(env.getProperty("appconf.security.rememberme.key"))
-                    .and()
-                    .logout()
-                    .logoutUrl("/app/logout")
-                    .logoutSuccessHandler(ajaxLogoutSuccessHandler)
-                    .deleteCookies("JSESSIONID")
-                    .permitAll()
-                    .and()
-                    .csrf()
-                    .disable() // Disabled, cause enabling it will cause sessions
-                    .headers()
-                    .frameOptions()
-                    .sameOrigin()
-                    .addHeaderWriter(new XXssProtectionHeaderWriter())
-                    .and()
-                    .authorizeRequests()
-                    .antMatchers("/*").permitAll()
-                    .antMatchers("/app/rest/authenticate").permitAll()
-                    .antMatchers("/app/rest/integration/login").permitAll()
-                    .antMatchers("/app/rest/temporary/example-options").permitAll()
-                    .antMatchers("/app/rest/idm/email-actions/*").permitAll()
-                    .antMatchers("/app/rest/idm/signups").permitAll()
-                    .antMatchers("/app/rest/idm/passwords").permitAll()
-                    .antMatchers("/druid/**").authenticated()
-                    .antMatchers("/actuator/**").authenticated()
-                    .antMatchers("/manage/**").authenticated()
-                    .antMatchers("/app/**").authenticated();
+	//
+	// BASIC AUTH
+	//
 
-            // Custom login form configurer to allow for non-standard HTTP-methods (eg. LOCK)
-            CustomFormLoginConfig<HttpSecurity> loginConfig = new CustomFormLoginConfig<HttpSecurity>();
-            loginConfig.loginProcessingUrl("/app/authentication")
-                    .successHandler(ajaxAuthenticationSuccessHandler)
-                    .failureHandler(ajaxAuthenticationFailureHandler)
-                    .usernameParameter("j_username")
-                    .passwordParameter("j_password")
-                    .permitAll();
+	@Configuration
+	@Order(1)
+	public static class ApiWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
+		@Override
+		protected void configure(HttpSecurity http) throws Exception {
 
-            http.apply(loginConfig);
-        }
+			http
+				.sessionManagement()
+					.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+					.and()
+				.csrf()
+					.disable()
+				.antMatcher("/api" + "/**")
+				.authorizeRequests()
+					.antMatchers("/api" + "/**").authenticated()
+					.and().httpBasic();
+		}
+	}
 
-        @Bean
-        public RememberMeServices rememberMeServices() {
-            return new CustomPersistentRememberMeServices(env, userDetailsService());
-        }
+	public static class LdapAuthenticationEnabledCondition implements Condition {
 
-        @Bean
-        public RememberMeAuthenticationProvider rememberMeAuthenticationProvider() {
-            return new RememberMeAuthenticationProvider(env.getProperty("appconf.security.rememberme.key"));
-        }
-    }
+		@Override
+		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			return context.getEnvironment().getProperty(KEY_LDAP_ENABLED, Boolean.class, false);
+		}
 
-    //
-    // BASIC AUTH
-    //
-
-    @Configuration
-    @Order(1)
-    public static class ApiWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-
-            http
-                    .sessionManagement()
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                    .and()
-                    .csrf()
-                    .disable()
-                    .antMatcher("/api" + "/**")
-                    .authorizeRequests()
-                    .antMatchers("/api" + "/**").authenticated()
-                    .and().httpBasic();
-        }
-    }
-
-    public static class LdapAuthenticationEnabledCondition implements Condition {
-
-        @Override
-        public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-            return context.getEnvironment().getProperty(KEY_LDAP_ENABLED, Boolean.class, false);
-        }
-
-    }
+	}
 
 }
