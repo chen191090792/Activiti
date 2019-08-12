@@ -31,5 +31,11 @@ public class ProcessDefinitionsResource extends AbstractProcessDefinitionsResour
 	    
 	    return super.getProcessDefinitions(latest, deploymentKey);
     }
+
+
+	@RequestMapping(value = "/rest/my/process-definitions", method = RequestMethod.GET)
+	public ResultListDataRepresentation getMyProcessDefinitions(@RequestParam(value="procdefKey", required=false) String procdefKey) {
+		return super.getMyProcessDefinitionsByKey(procdefKey);
+	}
 	
 }
