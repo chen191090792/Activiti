@@ -328,7 +328,7 @@ public abstract class BaseBpmnJsonConverter implements EditorJsonConstants, Sten
           multiInstanceObject.setCompletionCondition(multiInstanceCondition);
           activity.setLoopCharacteristics(multiInstanceObject);
         }
-        boolean willitsign = getPropertyValueAsBoolean(PROPERTY_WILLITSIGN_CONDITION, elementNode);
+        /*boolean willitsign = getPropertyValueAsBoolean(PROPERTY_WILLITSIGN_CONDITION, elementNode);
         if(willitsign){
           MultiInstanceLoopCharacteristics multiInstanceObject = new MultiInstanceLoopCharacteristics();
           multiInstanceObject.setSequential(false);
@@ -343,7 +343,7 @@ public abstract class BaseBpmnJsonConverter implements EditorJsonConstants, Sten
           multiInstanceObject.setInputDataItem("${assigneeList}");
           multiInstanceObject.setElementVariable("assignee");
           activity.setLoopCharacteristics(multiInstanceObject);
-        }
+        }*/
 
       } else if (baseElement instanceof Gateway) {
         JsonNode flowOrderNode = getProperty(PROPERTY_SEQUENCEFLOW_ORDER, elementNode);
