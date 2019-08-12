@@ -54,7 +54,6 @@ public abstract class AbstractProcessDefinitionsResource {
   public ResultListDataRepresentation getProcessDefinitions(Boolean latest, String deploymentKey) {
 
     ProcessDefinitionQuery definitionQuery = repositoryService.createProcessDefinitionQuery();
-
     if (deploymentKey != null) {
       Deployment deployment = repositoryService.createDeploymentQuery().deploymentKey(deploymentKey).latest().singleResult();
       
@@ -70,9 +69,19 @@ public abstract class AbstractProcessDefinitionsResource {
         definitionQuery.latestVersion();
       }
     }
-
     List<ProcessDefinition> definitions = definitionQuery.list();
     ResultListDataRepresentation result = new ResultListDataRepresentation(convertDefinitionList(definitions));
+    return result;
+  }
+
+  public ResultListDataRepresentation getMyProcessDefinitionsByKey(String procdefKey) {
+
+      ProcessDefinitionQuery definitionQuery = repositoryService.createProcessDefinitionQuery();
+      if(procdefKey!=null && procdefKey!=""){
+          definitionQuery.processDefinitionKey(procdefKey);
+      }
+        List<ProcessDefinition> definitions = definitionQuery.list();
+        ResultListDataRepresentation result = new ResultListDataRepresentation(convertDefinitionList(definitions));
     return result;
   }
 
