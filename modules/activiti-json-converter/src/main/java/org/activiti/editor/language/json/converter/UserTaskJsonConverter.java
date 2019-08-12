@@ -16,12 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.activiti.bpmn.model.BaseElement;
-import org.activiti.bpmn.model.ExtensionElement;
-import org.activiti.bpmn.model.FlowElement;
-import org.activiti.bpmn.model.UserTask;
+import org.activiti.bpmn.model.*;
 import org.activiti.editor.language.json.converter.util.CollectionUtils;
 import org.activiti.editor.language.json.model.ModelInfo;
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
@@ -310,6 +308,11 @@ public class UserTaskJsonConverter extends BaseBpmnJsonConverter implements Form
     
     task.setDueDate(getPropertyValueAsString(PROPERTY_USERTASK_DUEDATE, elementNode));
     task.setCategory(getPropertyValueAsString(PROPERTY_USERTASK_CATEGORY, elementNode));
+    JsonNode resourceNode = elementNode.get("resourceId");
+    String resourceId = "";
+    if(resourceNode!=null){
+      resourceId = resourceNode.textValue().replace("-","");
+    }
 
     JsonNode assignmentNode = getProperty(PROPERTY_USERTASK_ASSIGNMENT, elementNode);
     if (assignmentNode != null) {
@@ -360,11 +363,25 @@ public class UserTaskJsonConverter extends BaseBpmnJsonConverter implements Form
             }else if(idmTypeNode!=null && "lastnodeleader".equalsIgnoreCase(idmTypeNode.asText())){
               task.setAssignee("lastnodeleader");
               addExtensionElement("activiti-idm-initiator", String.valueOf(true), task);
+            }else if(idmTypeNode!=null && "departmentalparallel".equalsIgnoreCase(idmTypeNode.asText())){
+              task.setAssignee("${assignee"+resourceId+"}");
+              MultiInstanceLoopCharacteristics multiInstanceObject = new MultiInstanceLoopCharacteristics();
+              multiInstanceObject.setSequential(false);
+              multiInstanceObject.setInputDataItem("${assigneeList"+resourceId+"}");
+              multiInstanceObject.setElementVariable("assignee"+resourceId+"");
+              task.setLoopCharacteristics(multiInstanceObject);
+              addExtensionElement("activiti-idm-initiator", String.valueOf(true), task);
+            }else if(idmTypeNode!=null && "departmentalserial".equalsIgnoreCase(idmTypeNode.asText())){
+              task.setAssignee("${assignee"+resourceId+"}");
+              MultiInstanceLoopCharacteristics multiInstanceObject = new MultiInstanceLoopCharacteristics();
+              multiInstanceObject.setSequential(true);
+              multiInstanceObject.setInputDataItem("${assigneeList"+resourceId+"}");
+              multiInstanceObject.setElementVariable("assignee"+resourceId+"");
+              task.setLoopCharacteristics(multiInstanceObject);
+              addExtensionElement("activiti-idm-initiator", String.valueOf(true), task);
             }else if (idmTypeNode != null && "groups".equalsIgnoreCase(idmTypeNode.asText()) && (idmDefNode.has("candidateGroups") || idmDefNode.has("candidateGroupFields"))) {
-
               fillCandidateGroups(idmDefNode, canCompleteTaskNode, task);
-
-            } else {
+            }else {
               task.setAssignee("$INITIATOR");
               addExtensionElement("activiti-idm-initiator", String.valueOf(true), task);
             }
@@ -372,12 +389,6 @@ public class UserTaskJsonConverter extends BaseBpmnJsonConverter implements Form
         }
       }
     }
-    boolean willitsign = getPropertyValueAsBoolean("willitsign", elementNode);
-    boolean willitserial = getPropertyValueAsBoolean("willitserial", elementNode);
-   if(willitsign || willitserial){
-     task.setAssignee("${assignee}");
-     addExtensionElement("activiti-idm-initiator", String.valueOf(true), task);
-   }
     convertJsonToFormProperties(elementNode, task);
     return task;
   }

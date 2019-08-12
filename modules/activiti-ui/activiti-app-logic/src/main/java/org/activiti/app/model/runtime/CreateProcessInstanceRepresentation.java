@@ -18,6 +18,7 @@ public class CreateProcessInstanceRepresentation extends CompleteFormRepresentat
     private String processDefinitionId;
     private String name;
     private List<String> assigneeList;
+    private String assigneeKey;
 
     public void setName(String name) {
         this.name = name;
@@ -39,5 +40,13 @@ public class CreateProcessInstanceRepresentation extends CompleteFormRepresentat
 
     public void setAssigneeList(List<String> assigneeList) {
         this.assigneeList = assigneeList;
+    }
+
+    public String getAssigneeKey() {
+        return assigneeKey;
+    }
+
+    public void setAssigneeKey(String assigneeKey) {
+        this.assigneeKey = assigneeKey;
     }
 }
