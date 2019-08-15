@@ -58,19 +58,47 @@ public class ActivitiService {
     @Autowired
     protected PermissionService permissionService;
 
-
-    public ProcessInstance startProcessInstance(String processDefinitionId, Map<String, Object> variables, String processInstanceName) {
+    /**
+     *
+     * @param processDefinitionId
+     * @param variables
+     * @param processInstanceName
+     * @param assignee  指定人员
+     * @return
+     */
+    public ProcessInstance startProcessInstance(String processDefinitionId, Map<String, Object> variables, String processInstanceName,String assignee) {
         ProcessInstance processInstance = runtimeService.startProcessInstanceById(processDefinitionId, variables);
         if (!processInstance.isEnded() && processInstanceName != null) {
             runtimeService.setProcessInstanceName(processInstance.getId(), processInstanceName);
         }
-        changeAssignee(processInstance.getId());
+        changeAssignee(processInstance.getId(),assignee);
         return processInstance;
 	}
 
-    public void changeAssignee(String processInstanceId){
+//    /**
+//     * 指定人员
+//     * @param processDefinitionId
+//     * @param variables
+//     * @param processInstanceName
+//     * @return
+//     */
+//    public ProcessInstance startProcessInstanceForPerson(String processDefinitionId, Map<String, Object> variables, String processInstanceName) {
+//        ProcessInstance processInstance = runtimeService.startProcessInstanceById(processDefinitionId, variables);
+//        if (!processInstance.isEnded() && processInstanceName != null) {
+//            runtimeService.setProcessInstanceName(processInstance.getId(), processInstanceName);
+//        }
+//        changeAssignee(processInstance.getId());
+//        return processInstance;
+//    }
+
+    public void changeAssignee(String processInstanceId, String assignee){
         ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
-        List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
-        TaskAssigneeSetUtils.setAssignee(tasks,processInstance,taskService);
+        if(StringUtils.isNotEmpty(assignee)){
+            List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
+            TaskAssigneeSetUtils.setAssignee(tasks,processInstance,assignee,taskService);
+        }
     }
+
+
+
 }

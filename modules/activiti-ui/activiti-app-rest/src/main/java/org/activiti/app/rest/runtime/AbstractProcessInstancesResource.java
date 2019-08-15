@@ -119,7 +119,7 @@ public abstract class AbstractProcessInstancesResource {
     if(startRequest.getAssigneeList()!=null && startRequest.getAssigneeList().size()>0 && StringUtils.isNotEmpty(startRequest.getAssigneeKey())){
       variables.put(startRequest.getAssigneeKey(), startRequest.getAssigneeList());
     }
-    ProcessInstance processInstance = activitiService.startProcessInstance(startRequest.getProcessDefinitionId(), variables, startRequest.getName());
+    ProcessInstance processInstance = activitiService.startProcessInstance(startRequest.getProcessDefinitionId(), variables, startRequest.getName(),startRequest.getAssignee());
     HistoricProcessInstance historicProcess = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstance.getId()).singleResult();
     if (formDefinition != null) {
       formService.storeSubmittedForm(variables, formDefinition, null, historicProcess.getId());

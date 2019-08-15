@@ -12,25 +12,19 @@
  */
 package org.activiti.app.rest.runtime;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.activiti.app.model.common.ResultListDataRepresentation;
 import org.activiti.app.model.idm.UserRepresentation;
 import org.activiti.app.model.runtime.TaskRepresentation;
 import org.activiti.app.rest.entity.CustomProcessDiagramGenerator;
-import org.activiti.app.rest.utils.JedisUtils;
 import org.activiti.app.security.SecurityUtils;
 import org.activiti.app.service.api.UserCache;
 import org.activiti.app.service.api.UserCache.CachedUser;
 import org.activiti.app.service.exception.BadRequestException;
 import org.activiti.app.service.exception.NotPermittedException;
 import org.activiti.app.service.runtime.PermissionService;
+import org.activiti.app.service.util.JedisUtils;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FlowNode;
 import org.activiti.bpmn.model.SequenceFlow;
@@ -47,13 +41,16 @@ import org.activiti.image.ProcessDiagramGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import redis.clients.jedis.JedisCluster;
 import sun.misc.BASE64Encoder;
+
+import javax.inject.Inject;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.apache.commons.io.IOUtils.copyLarge;
 

@@ -19,6 +19,15 @@ public class CreateProcessInstanceRepresentation extends CompleteFormRepresentat
     private String name;
     private List<String> assigneeList;
     private String assigneeKey;
+    private String assignee;
+
+    public String getAssignee() {
+        return assignee;
+    }
+
+    public void setAssignee(String assignee) {
+        this.assignee = assignee;
+    }
 
     public void setName(String name) {
         this.name = name;

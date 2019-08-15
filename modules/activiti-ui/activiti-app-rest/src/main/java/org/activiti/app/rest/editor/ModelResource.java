@@ -24,7 +24,6 @@ import org.activiti.app.model.editor.ModelKeyRepresentation;
 import org.activiti.app.model.editor.ModelRepresentation;
 import org.activiti.app.repository.editor.ModelRepository;
 import org.activiti.app.rest.entity.ChildShapesEntity;
-import org.activiti.app.rest.utils.JedisUtils;
 import org.activiti.app.security.SecurityUtils;
 import org.activiti.app.service.api.ModelService;
 import org.activiti.app.service.exception.BadRequestException;
