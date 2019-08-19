@@ -293,7 +293,7 @@ public abstract class AbstractTaskQueryResource {
           processDefinition = (ProcessDefinitionEntity) repositoryService.getProcessDefinition(task.getProcessDefinitionId());
         }
         TaskRepresentation representation = new TaskRepresentation(task, processDefinition, processInstanceNames.get(task.getProcessInstanceId()));
-        
+        representation.setCurrentNodeKey(task.getTaskDefinitionKey());
         if (StringUtils.isNotEmpty(task.getAssignee())) {
           CachedUser cachedUser = userCache.getUser(task.getAssignee());
           if (cachedUser != null && cachedUser.getUser() != null) {
