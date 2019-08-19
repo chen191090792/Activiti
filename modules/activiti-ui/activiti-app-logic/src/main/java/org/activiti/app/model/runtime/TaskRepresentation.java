@@ -61,6 +61,8 @@ public class TaskRepresentation extends AbstractRepresentation {
   protected boolean initiatorCanCompleteTask;
   protected boolean isMemberOfCandidateGroup;
   protected boolean isMemberOfCandidateUsers;
+  //当前任务节点key 自定义
+  protected String currentNodeKey;
 
   @JsonDeserialize(contentAs = UserRepresentation.class)
   @JsonInclude(Include.NON_NULL)
@@ -106,6 +108,14 @@ public class TaskRepresentation extends AbstractRepresentation {
       this.processDefinitionVersion = processDefinition.getVersion();
       this.processDefinitionDeploymentId = processDefinition.getDeploymentId();
     }
+  }
+
+  public String getCurrentNodeKey() {
+    return currentNodeKey;
+  }
+
+  public void setCurrentNodeKey(String currentNodeKey) {
+    this.currentNodeKey = currentNodeKey;
   }
 
   public TaskRepresentation(TaskInfo taskInfo, ProcessDefinition processDefinition, String processInstanceName) {
