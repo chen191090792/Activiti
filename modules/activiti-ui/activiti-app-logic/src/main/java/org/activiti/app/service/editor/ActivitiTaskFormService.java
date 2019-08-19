@@ -209,7 +209,7 @@ public class ActivitiTaskFormService {
   public void changeAssignee(String executionId, String processId) {
     ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processId).singleResult();
     List<Task> tasks = taskService.createTaskQuery().executionId(executionId).processInstanceId(processId).listPage(0,100000);
-    TaskAssigneeSetUtils.setAssignee(tasks,processInstance,taskService);
+    TaskAssigneeSetUtils.setAssignee(tasks,processInstance,null,taskService);
   }
 
 
