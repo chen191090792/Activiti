@@ -143,7 +143,7 @@ public class ActivitiTaskFormService {
         completeTaskFormRepresentation.getOutcome());
     formService.storeSubmittedForm(variables, formDefinition, task.getId(), task.getProcessInstanceId());
     taskService.complete(taskId, variables);
-    changeAssignee(task.getExecutionId(),task.getProcessInstanceId());
+    changeAssignee(task.getExecutionId(),task.getProcessInstanceId(),completeTaskFormRepresentation.getAssignment());
     completeTaskForm(task.getProcessInstanceId());
   }
 
@@ -206,10 +206,10 @@ public class ActivitiTaskFormService {
     return processInstanceVariableRepresenations;
   }
 
-  public void changeAssignee(String executionId, String processId) {
+  public void changeAssignee(String executionId, String processId,String assignment) {
     ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processId).singleResult();
     List<Task> tasks = taskService.createTaskQuery().executionId(executionId).processInstanceId(processId).listPage(0,100000);
-    TaskAssigneeSetUtils.setAssignee(tasks,processInstance,null,taskService);
+    TaskAssigneeSetUtils.setAssignee(tasks,processInstance,assignment,taskService);
   }
 
 
