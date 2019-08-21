@@ -12,6 +12,7 @@
  */
 package org.activiti.app.model.runtime;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,7 +25,24 @@ public class CompleteFormRepresentation {
   protected Map<String, Object> values;
   protected String outcome;
   private String assignment;
-  
+  private String assigneeKey;
+  private List<String> assigneeList;
+
+	public String getAssigneeKey() {
+		return assigneeKey;
+	}
+	public void setAssigneeKey(String assigneeKey) {
+		this.assigneeKey = assigneeKey;
+	}
+
+	public List<String> getAssigneeList() {
+		return assigneeList;
+	}
+
+	public void setAssigneeList(List<String> assigneeList) {
+		this.assigneeList = assigneeList;
+	}
+
 	public String getFormId() {
     return formId;
   }
