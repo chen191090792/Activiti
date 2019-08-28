@@ -88,6 +88,7 @@ public abstract class AbstractProcessDefinitionsResource {
   protected List<ProcessDefinitionRepresentation> convertDefinitionList(List<ProcessDefinition> definitions) {
     Map<String, Boolean> startFormMap = new HashMap<String, Boolean>();
     List<ProcessDefinitionRepresentation> result = new ArrayList<ProcessDefinitionRepresentation>();
+      JedisCluster jedisCluser = JedisUtils.getJedisCluser();
     if (CollectionUtils.isNotEmpty(definitions)) {
       for (ProcessDefinition processDefinition : definitions) {
         if (startFormMap.containsKey(processDefinition.getId()) == false) {
@@ -125,7 +126,6 @@ public abstract class AbstractProcessDefinitionsResource {
         ProcessDefinitionRepresentation rep = new ProcessDefinitionRepresentation(processDefinition);
         rep.setProcessType(processType);
         rep.setJump(jump);
-        JedisCluster jedisCluser = JedisUtils.getJedisCluser();
         jedisCluser.set(processDefinition.getId(),jump);
         rep.setHasStartForm(startFormMap.get(processDefinition.getId()));
         result.add(rep);
