@@ -29,6 +29,8 @@ public class KiteApiCallUtils {
     private static String EMAIL_MSG_URL="http://localhost:8080/api/kite/email";
     private static String CHECK_ADMIN_URL="http://localhost:8080/api/kite/checkAdmin/%s";
 
+    private static String GET_ASSIGNEE_URL="http://localhost:8080/api/kite/getActNodeDetailInfo";
+
     public static String getUpLeader(String startById){
         String url = String.format(GET_UPLEADER_URL,startById);
         HttpHeaders headers = new HttpHeaders();
@@ -90,5 +92,16 @@ public class KiteApiCallUtils {
         return  result.getBody();
         */
        return true;
+    }
+
+    public static String getAssignee(String taskDefinitionKey, Integer processDefinitionVersion) {
+        String url = GET_ASSIGNEE_URL+"?processNodeId="+taskDefinitionKey+"&version="+processDefinitionVersion;
+        HttpHeaders headers = new HttpHeaders();
+        MediaType type = MediaType.parseMediaType(MEDIA_TYPE);
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        headers.setContentType(type);
+        HttpEntity entity = new HttpEntity<>(null, headers);
+        HttpEntity<String> result = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+        return  result.getBody();
     }
 }

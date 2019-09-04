@@ -12,11 +12,17 @@
  */
 package org.activiti.app.service.editor;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
+import org.activiti.app.model.common.ResultListDataRepresentation;
+import org.activiti.app.model.idm.UserRepresentation;
 import org.activiti.app.model.runtime.CompleteFormRepresentation;
+import org.activiti.app.model.runtime.ProcessInstanceRepresentation;
 import org.activiti.app.model.runtime.ProcessInstanceVariableRepresentation;
+import org.activiti.app.model.runtime.TaskRepresentation;
 import org.activiti.app.security.SecurityUtils;
+import org.activiti.app.service.api.UserCache;
 import org.activiti.app.service.exception.MyTaskException;
 import org.activiti.app.service.exception.NotFoundException;
 import org.activiti.app.service.exception.NotPermittedException;
@@ -24,13 +30,19 @@ import org.activiti.app.service.runtime.PermissionService;
 import org.activiti.app.service.util.JedisUtils;
 import org.activiti.app.service.util.TaskAssigneeSetUtils;
 import org.activiti.app.util.KiteApiCallUtils;
+import org.activiti.editor.language.json.converter.util.CollectionUtils;
 import org.activiti.engine.*;
+import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.history.HistoricTaskInstanceQuery;
 import org.activiti.engine.history.HistoricVariableInstance;
 import org.activiti.engine.identity.User;
+import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
+import org.activiti.engine.task.TaskInfo;
+import org.activiti.engine.task.TaskInfoQueryWrapper;
 import org.activiti.form.api.FormRepositoryService;
 import org.activiti.form.api.FormService;
 import org.activiti.form.model.FormDefinition;
@@ -44,6 +56,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import redis.clients.jedis.JedisCluster;
+
+import javax.inject.Inject;
 
 /**
  * @author Tijs Rademakers
@@ -75,6 +89,9 @@ public class ActivitiTaskFormService {
   protected ObjectMapper objectMapper;
   @Autowired
   private RuntimeService runtimeService;
+
+  @Inject
+  protected UserCache userCache;
 
   private RestTemplate restTemplate = new RestTemplate();
 
@@ -147,11 +164,16 @@ public class ActivitiTaskFormService {
       variables.put(completeTaskFormRepresentation.getAssigneeKey(),completeTaskFormRepresentation.getAssigneeList());
     }
     taskService.complete(taskId, variables);
-    changeAssignee(task.getExecutionId(),task.getProcessInstanceId(),completeTaskFormRepresentation.getAssignment());
-    completeTaskForm(task.getProcessInstanceId());
+    String assignee = completeTaskForm(task.getProcessInstanceId());
+
+    changeAssignee(task.getExecutionId(),task.getProcessInstanceId(),/*completeTaskFormRepresentation.getAssignment()*/assignee);
   }
 
-  protected void completeTaskForm(String processInstanceId){
+
+
+
+  protected String completeTaskForm(String processInstanceId){
+    String assignee = "";
     User currentUser = SecurityUtils.getCurrentUserObject();
     List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
     ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
@@ -160,7 +182,8 @@ public class ActivitiTaskFormService {
       String jump = jedisCluser.get(processInstance.getProcessDefinitionId());
       if(StringUtils.equalsIgnoreCase("是",jump)){
         for(Task task:tasks){
-          if(task.getAssignee().equals(currentUser.getId()) || task.getAssignee().equals(processInstance.getStartUserId())){
+            assignee = KiteApiCallUtils.getAssignee(task.getTaskDefinitionKey(),processInstance.getProcessDefinitionVersion());
+          if(currentUser.getId().equals(assignee) || processInstance.getStartUserId().equals(assignee) || checkBeforeExamine(processInstanceId,assignee)){
             FormDefinition form = this.getTaskForm(task.getId());
             CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
             completeFormRepresentation.setFormId(form.getId());
@@ -168,22 +191,118 @@ public class ActivitiTaskFormService {
             values.put("applyResult","同意");
             values.put("applyRemarks","通过");
             completeFormRepresentation.setValues(values);
-            this.myCompleteTaskForm(task.getId(),completeFormRepresentation);
+            this.myCompleteTaskForm(task.getId(),completeFormRepresentation,assignee);
+            assignee = completeTaskForm(processInstanceId);
+          }
+        }
+
+      }
+    }
+    return assignee;
+  }
+
+  public boolean checkBeforeExamine(String processInstanceId,String assignee){
+    boolean resultBoolean = false;
+    if(StringUtils.isNotEmpty(assignee)){
+      HistoricTaskInstanceQuery historicTaskInstanceQuery = this.historyService.createHistoricTaskInstanceQuery();
+      historicTaskInstanceQuery.finished();
+      TaskInfoQueryWrapper taskInfoQueryWrapper = new TaskInfoQueryWrapper(historicTaskInstanceQuery);
+      taskInfoQueryWrapper.getTaskInfoQuery().processInstanceId(processInstanceId);
+      taskInfoQueryWrapper.getTaskInfoQuery().orderByTaskCreateTime().asc();
+      List<? extends TaskInfo> tasksList = taskInfoQueryWrapper.getTaskInfoQuery().listPage(0, 100);
+      Map<String, String> processInstancesNames = new HashMap();
+      ResultListDataRepresentation result = new ResultListDataRepresentation(this.convertTaskInfoList(tasksList, processInstancesNames));
+      if(result!=null){
+        if(result.getData()!=null){
+          List<TaskRepresentation> data = (List<TaskRepresentation>)result.getData();
+          for(TaskRepresentation representation:data){
+            if(representation!=null){
+              UserRepresentation assignee1 = representation.getAssignee();
+              if(assignee1!=null){
+                if(assignee.equals( assignee1.getId())){
+                  resultBoolean = true;
+                }
+              }
+            }
           }
         }
       }
     }
+    return resultBoolean;
   }
 
+  protected List<TaskRepresentation> convertTaskInfoList(List<? extends TaskInfo> tasks, Map<String, String> processInstanceNames) {
+    List<TaskRepresentation> result = new ArrayList();
+    if (CollectionUtils.isNotEmpty(tasks)) {
+      SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+      TaskRepresentation representation;
+      for(Iterator var5 = tasks.iterator(); var5.hasNext(); result.add(representation)) {
+        TaskInfo task = (TaskInfo)var5.next();
+        ProcessDefinitionEntity processDefinition = null;
+        if (task.getProcessDefinitionId() != null) {
+          processDefinition = (ProcessDefinitionEntity)this.repositoryService.getProcessDefinition(task.getProcessDefinitionId());
+        }
+
+        representation = new TaskRepresentation(task, processDefinition, (String)processInstanceNames.get(task.getProcessInstanceId()));
+        representation.setCurrentNodeKey(task.getTaskDefinitionKey());
+        if (StringUtils.isNotEmpty(task.getAssignee())) {
+          UserCache.CachedUser cachedUser = this.userCache.getUser(task.getAssignee());
+          if (cachedUser != null && cachedUser.getUser() != null) {
+            User assignee = cachedUser.getUser();
+            representation.setAssignee(new UserRepresentation(assignee));
+            representation.setCreateDate(dateFormat.format(new Date(representation.getCreated().getTime())));
+            if (representation.getDueDate() != null) {
+              representation.setDueeDate(dateFormat.format(new Date(representation.getDueDate().getTime())));
+            }
+
+            if (representation.getEndDate() != null) {
+              representation.setEndeDate(dateFormat.format(new Date(representation.getEndDate().getTime())));
+            }
+
+            representation.setStartedBy(this.getStartedBy(representation.getProcessInstanceId()));
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  public UserRepresentation getStartedBy(String processInstanceId) {
+    UserRepresentation userRepresentation = null;
+    HistoricProcessInstance processInstance = (HistoricProcessInstance)this.historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+    boolean admin = KiteApiCallUtils.checkAdmin();
+    if (!admin && !this.permissionService.hasReadPermissionOnProcessInstance(SecurityUtils.getCurrentUserObject(), processInstance, processInstanceId)) {
+      throw new NotFoundException("Process with id: " + processInstanceId + " does not exist or is not available for this user");
+    } else {
+      ProcessDefinitionEntity processDefinition = (ProcessDefinitionEntity)this.repositoryService.getProcessDefinition(processInstance.getProcessDefinitionId());
+      User userRep = null;
+      if (processInstance.getStartUserId() != null) {
+        UserCache.CachedUser user = this.userCache.getUser(processInstance.getStartUserId());
+        if (user != null && user.getUser() != null) {
+          userRep = user.getUser();
+        }
+      }
+
+      ProcessInstanceRepresentation processInstanceResult = new ProcessInstanceRepresentation(processInstance, processDefinition, processDefinition.isGraphicalNotationDefined(), userRep);
+      if (processInstanceResult != null) {
+        userRepresentation = processInstanceResult.getStartedBy();
+      }
+
+      return userRepresentation;
+    }
+  }
 
   @Transactional
-  public void myCompleteTaskForm(String taskId, CompleteFormRepresentation completeTaskFormRepresentation) {
+  public void myCompleteTaskForm(String taskId, CompleteFormRepresentation completeTaskFormRepresentation,String assignee) {
 
     // Get the form definition
     Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
     if (task == null) {
       throw new NotFoundException("Task not found with id: " + taskId);
     }
+    taskService.setAssignee(task.getId(),assignee);
     FormDefinition formDefinition = formRepositoryService.getFormDefinitionById(completeTaskFormRepresentation.getFormId());
     // Extract raw variables and complete the task
     Map<String, Object> variables = formService.getVariablesFromFormSubmission(formDefinition, completeTaskFormRepresentation.getValues(),
