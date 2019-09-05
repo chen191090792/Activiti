@@ -66,7 +66,7 @@ public class TaskFormResource {
       String processInstanceId = task.getProcessInstanceId();
       String assignment = completeTaskFormRepresentation.getAssignment();
       taskFormService.completeTaskForm(taskId, completeTaskFormRepresentation);
-      taskFormService.changeAssignee(executionId,processInstanceId,assignment);
+     // taskFormService.changeAssignee(executionId,processInstanceId,assignment);
       msg.setErrorCode(0);
       msg.setErrorMsg("执行成功！");
     } catch (Exception e) {

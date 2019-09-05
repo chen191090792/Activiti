@@ -165,21 +165,21 @@ public class ActivitiTaskFormService implements Serializable {
         completeTaskFormRepresentation.getOutcome());
     formService.storeSubmittedForm(variables, formDefinition, task.getId(), task.getProcessInstanceId());
     //会签
-    if(StringUtils.isNotEmpty(completeTaskFormRepresentation.getAssigneeKey()) && completeTaskFormRepresentation.getAssigneeList()!=null &&  completeTaskFormRepresentation.getAssigneeList().size()>0 ){
+   /* if(StringUtils.isNotEmpty(completeTaskFormRepresentation.getAssigneeKey()) && completeTaskFormRepresentation.getAssigneeList()!=null &&  completeTaskFormRepresentation.getAssigneeList().size()>0 ){
       variables.put(completeTaskFormRepresentation.getAssigneeKey(),completeTaskFormRepresentation.getAssigneeList());
-    }
+    }*/
 
     taskService.complete(taskId, variables);
-    /*String assignee = completeTaskForm(task.getProcessInstanceId());
+    String assignee =completeTaskForm(task.getProcessInstanceId());
     if(StringUtils.isEmpty(assignee)){
-      assignee = completeTaskFormRepresentation.getAssignment();
-    }*/
-    //changeAssignee(executionId,processInstanceId,assignment);
+      assignee = assignment;
+    }
+    changeAssignee(executionId,processInstanceId,assignee);
   }
 
 
 
-
+  @Transactional
   protected String completeTaskForm(String processInstanceId){
     String assignee = "";
     User currentUser = SecurityUtils.getCurrentUserObject();
