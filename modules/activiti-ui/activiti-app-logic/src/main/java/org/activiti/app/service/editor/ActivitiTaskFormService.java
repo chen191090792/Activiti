@@ -144,6 +144,9 @@ public class ActivitiTaskFormService implements Serializable {
 
     // Get the form definition
     Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
+    String executionId = task.getExecutionId();
+    String processInstanceId = task.getProcessInstanceId();
+    String assignment = completeTaskFormRepresentation.getAssignment();
     if (task == null) {
       throw new NotFoundException("Task not found with id: " + taskId);
     }
@@ -171,7 +174,7 @@ public class ActivitiTaskFormService implements Serializable {
     if(StringUtils.isEmpty(assignee)){
       assignee = completeTaskFormRepresentation.getAssignment();
     }*/
-    //changeAssignee(task.getExecutionId(),task.getProcessInstanceId(),completeTaskFormRepresentation.getAssignment());
+    //changeAssignee(executionId,processInstanceId,assignment);
   }
 
 

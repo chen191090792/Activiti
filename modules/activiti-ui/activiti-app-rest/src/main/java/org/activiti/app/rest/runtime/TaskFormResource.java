@@ -51,9 +51,9 @@ public class TaskFormResource {
   @ResponseStatus(value = HttpStatus.OK)
   @RequestMapping(value = "/{taskId}", method = RequestMethod.POST, produces = "application/json")
   public void completeTaskForm(@PathVariable String taskId, @RequestBody CompleteFormRepresentation completeTaskFormRepresentation) {
-    Task task = (Task)((TaskQuery)this.taskService.createTaskQuery().taskId(taskId)).singleResult();
+   // Task task = (Task)((TaskQuery)this.taskService.createTaskQuery().taskId(taskId)).singleResult();
     taskFormService.completeTaskForm(taskId, completeTaskFormRepresentation);
-    taskFormService.changeAssignee(task.getExecutionId(),task.getProcessInstanceId(),completeTaskFormRepresentation.getAssignment());
+    //taskFormService.changeAssignee(task.getExecutionId(),task.getProcessInstanceId());
   }
 
   @ResponseStatus(value = HttpStatus.OK)
@@ -61,7 +61,12 @@ public class TaskFormResource {
   public ResultMsg completeMyTaskForm(@PathVariable String taskId, @RequestBody CompleteFormRepresentation completeTaskFormRepresentation) {
     ResultMsg msg = new ResultMsg();
     try {
+      Task task = (Task)((TaskQuery)this.taskService.createTaskQuery().taskId(taskId)).singleResult();
+      String executionId = task.getExecutionId();
+      String processInstanceId = task.getProcessInstanceId();
+      String assignment = completeTaskFormRepresentation.getAssignment();
       taskFormService.completeTaskForm(taskId, completeTaskFormRepresentation);
+      taskFormService.changeAssignee(executionId,processInstanceId,assignment);
       msg.setErrorCode(0);
       msg.setErrorMsg("执行成功！");
     } catch (Exception e) {
