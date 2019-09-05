@@ -94,8 +94,8 @@ public class KiteApiCallUtils {
        return true;
     }
 
-    public static String getAssignee(String taskDefinitionKey, Integer processDefinitionVersion) {
-        String url = GET_ASSIGNEE_URL+"?processNodeId="+taskDefinitionKey+"&version="+processDefinitionVersion;
+    public static String getAssignee(String taskDefinitionKey, Integer processDefinitionVersion,String userId) {
+        String url = GET_ASSIGNEE_URL+"?processNodeId="+taskDefinitionKey+"&version="+processDefinitionVersion+"&phone="+userId;
         HttpHeaders headers = new HttpHeaders();
         MediaType type = MediaType.parseMediaType(MEDIA_TYPE);
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));

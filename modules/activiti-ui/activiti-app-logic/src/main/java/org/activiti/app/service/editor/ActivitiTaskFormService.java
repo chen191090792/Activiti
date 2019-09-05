@@ -12,6 +12,7 @@
  */
 package org.activiti.app.service.editor;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -32,6 +33,7 @@ import org.activiti.app.service.util.TaskAssigneeSetUtils;
 import org.activiti.app.util.KiteApiCallUtils;
 import org.activiti.editor.language.json.converter.util.CollectionUtils;
 import org.activiti.engine.*;
+import org.activiti.engine.delegate.TaskListener;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.history.HistoricTaskInstanceQuery;
@@ -63,7 +65,7 @@ import javax.inject.Inject;
  * @author Tijs Rademakers
  */
 @Service
-public class ActivitiTaskFormService {
+public class ActivitiTaskFormService implements Serializable {
 
   private static final Logger logger = LoggerFactory.getLogger(ActivitiTaskFormService.class);
 
@@ -163,10 +165,13 @@ public class ActivitiTaskFormService {
     if(StringUtils.isNotEmpty(completeTaskFormRepresentation.getAssigneeKey()) && completeTaskFormRepresentation.getAssigneeList()!=null &&  completeTaskFormRepresentation.getAssigneeList().size()>0 ){
       variables.put(completeTaskFormRepresentation.getAssigneeKey(),completeTaskFormRepresentation.getAssigneeList());
     }
-    taskService.complete(taskId, variables);
-    String assignee = completeTaskForm(task.getProcessInstanceId());
 
-    changeAssignee(task.getExecutionId(),task.getProcessInstanceId(),/*completeTaskFormRepresentation.getAssignment()*/assignee);
+    taskService.complete(taskId, variables);
+    /*String assignee = completeTaskForm(task.getProcessInstanceId());
+    if(StringUtils.isEmpty(assignee)){
+      assignee = completeTaskFormRepresentation.getAssignment();
+    }*/
+    //changeAssignee(task.getExecutionId(),task.getProcessInstanceId(),completeTaskFormRepresentation.getAssignment());
   }
 
 
@@ -182,7 +187,7 @@ public class ActivitiTaskFormService {
       String jump = jedisCluser.get(processInstance.getProcessDefinitionId());
       if(StringUtils.equalsIgnoreCase("是",jump)){
         for(Task task:tasks){
-            assignee = KiteApiCallUtils.getAssignee(task.getTaskDefinitionKey(),processInstance.getProcessDefinitionVersion());
+            assignee = KiteApiCallUtils.getAssignee(task.getTaskDefinitionKey(),processInstance.getProcessDefinitionVersion(),currentUser.getId());
           if(currentUser.getId().equals(assignee) || processInstance.getStartUserId().equals(assignee) || checkBeforeExamine(processInstanceId,assignee)){
             FormDefinition form = this.getTaskForm(task.getId());
             CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
@@ -329,7 +334,7 @@ public class ActivitiTaskFormService {
         new ArrayList<ProcessInstanceVariableRepresentation>(processInstanceVariables.values());
     return processInstanceVariableRepresenations;
   }
-
+  @Transactional
   public void changeAssignee(String executionId, String processId,String assignment) {
     ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processId).singleResult();
     List<Task> tasks = taskService.createTaskQuery().executionId(executionId).processInstanceId(processId).listPage(0,100000);

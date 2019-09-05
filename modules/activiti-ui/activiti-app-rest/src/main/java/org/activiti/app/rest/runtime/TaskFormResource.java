@@ -51,9 +51,9 @@ public class TaskFormResource {
   @ResponseStatus(value = HttpStatus.OK)
   @RequestMapping(value = "/{taskId}", method = RequestMethod.POST, produces = "application/json")
   public void completeTaskForm(@PathVariable String taskId, @RequestBody CompleteFormRepresentation completeTaskFormRepresentation) {
-   // Task task = (Task)((TaskQuery)this.taskService.createTaskQuery().taskId(taskId)).singleResult();
+    Task task = (Task)((TaskQuery)this.taskService.createTaskQuery().taskId(taskId)).singleResult();
     taskFormService.completeTaskForm(taskId, completeTaskFormRepresentation);
-    //taskFormService.changeAssignee(task.getExecutionId(),task.getProcessInstanceId());
+    taskFormService.changeAssignee(task.getExecutionId(),task.getProcessInstanceId(),completeTaskFormRepresentation.getAssignment());
   }
 
   @ResponseStatus(value = HttpStatus.OK)
