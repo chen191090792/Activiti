@@ -34,7 +34,7 @@ public class TaskAssigneeSetUtils {
      　* @date 2019/7/19 9:35
      　*/
     private static void sendMessage(Task task){
-             KiteApiCallUtils.sendWxMsg(task);
+           // KiteApiCallUtils.sendWxMsg(task);
           //KiteApiCallUtils.sendEmail(task);
     }
 
