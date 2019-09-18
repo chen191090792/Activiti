@@ -24,9 +24,27 @@ public class CompleteFormRepresentation {
   protected String formId;
   protected Map<String, Object> values;
   protected String outcome;
+  private String startby;//流程发起人
+  private String levelType;//任意人标识
   private String assignment;
   private String assigneeKey;
   private List<String> assigneeList;
+
+	public String getLevelType() {
+		return levelType;
+	}
+
+	public void setLevelType(String levelType) {
+		this.levelType = levelType;
+	}
+
+	public String getStartby() {
+		return startby;
+	}
+
+	public void setStartby(String startby) {
+		this.startby = startby;
+	}
 
 	public String getAssigneeKey() {
 		return assigneeKey;

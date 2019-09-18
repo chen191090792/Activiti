@@ -65,6 +65,8 @@ public class TaskFormResource {
       String executionId = task.getExecutionId();
       String processInstanceId = task.getProcessInstanceId();
       String assignment = completeTaskFormRepresentation.getAssignment();
+      String startby = completeTaskFormRepresentation.getStartby();
+      String levelType = completeTaskFormRepresentation.getLevelType();
       taskFormService.completeTaskForm(taskId, completeTaskFormRepresentation);
      // taskFormService.changeAssignee(executionId,processInstanceId,assignment);
       msg.setErrorCode(0);

@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.activiti.app.model.common.ResultListDataRepresentation;
+import org.activiti.app.model.editor.form.CompleteTaskFormRepresentation;
 import org.activiti.app.model.idm.UserRepresentation;
 import org.activiti.app.model.runtime.CompleteFormRepresentation;
 import org.activiti.app.model.runtime.ProcessInstanceRepresentation;
@@ -170,7 +171,7 @@ public class ActivitiTaskFormService implements Serializable {
     }*/
 
     taskService.complete(taskId, variables);
-    String assignee =completeTaskForm(task.getProcessInstanceId());
+    String assignee =completeTaskForm(task.getProcessInstanceId(),completeTaskFormRepresentation.getLevelType(),completeTaskFormRepresentation.getStartby());
     if(StringUtils.isEmpty(assignee)){
       assignee = assignment;
     }
@@ -180,7 +181,7 @@ public class ActivitiTaskFormService implements Serializable {
 
 
   @Transactional
-  protected String completeTaskForm(String processInstanceId){
+  protected String completeTaskForm(String processInstanceId, String levelType,String startBy){
     String assignee = "";
     User currentUser = SecurityUtils.getCurrentUserObject();
     List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
@@ -190,7 +191,12 @@ public class ActivitiTaskFormService implements Serializable {
       String jump = jedisCluser.get(processInstance.getProcessDefinitionId());
       if(StringUtils.equalsIgnoreCase("是",jump)){
         for(Task task:tasks){
-            assignee = KiteApiCallUtils.getAssignee(task.getTaskDefinitionKey(),processInstance.getProcessDefinitionVersion(),currentUser.getId());
+          String str = currentUser.getId();
+          if(StringUtils.isNotEmpty(levelType) && StringUtils.isNotEmpty(startBy)){//任意人处理
+            str = startBy;
+          }
+            assignee = KiteApiCallUtils.getAssignee(task.getTaskDefinitionKey(),processInstance.getProcessDefinitionVersion(),str);
+
           if(currentUser.getId().equals(assignee) || processInstance.getStartUserId().equals(assignee) || checkBeforeExamine(processInstanceId,assignee)){
             FormDefinition form = this.getTaskForm(task.getId());
             CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
@@ -200,10 +206,9 @@ public class ActivitiTaskFormService implements Serializable {
             values.put("applyRemarks","通过");
             completeFormRepresentation.setValues(values);
             this.myCompleteTaskForm(task.getId(),completeFormRepresentation,assignee);
-            assignee = completeTaskForm(processInstanceId);
+            assignee = completeTaskForm(processInstanceId,levelType,startBy);
           }
         }
-
       }
     }
     return assignee;
