@@ -21,44 +21,6 @@ public class TaskAssigneeSetUtils {
 
     public static void setAssignee(List<Task> tasks , ProcessInstance processInstance, String assignee, TaskService taskService){
         for(Task task:tasks){
-//            if(task!=null && "leader".equalsIgnoreCase(task.getAssignee())){
-//                String assignee = KiteApiCallUtils.getUpLeader(processInstance.getStartUserId());
-//                if(StringUtils.isNotEmpty(assignee)){
-//                    if(assignee.contains("-1")){
-//                        throw new MyTaskException("拟稿人上级领导未找到");
-//                    }else{
-//                        taskService.setAssignee(task.getId(),assignee);
-//                        sendMessage(task);
-//                    }
-//                }else{
-//                    throw new MyTaskException("上级领导未找到");
-//                }
-//            }else if(task!=null && "deptleader".equalsIgnoreCase(task.getAssignee())){
-//                String assignee = KiteApiCallUtils.getDeptLeader(processInstance.getStartUserId());
-//                if(StringUtils.isNotEmpty(assignee)){
-//                    if(assignee.contains("-1")){
-//                        throw new MyTaskException("部门领导未找到");
-//                    }else{
-//                        taskService.setAssignee(task.getId(),assignee);
-//                        sendMessage(task);
-//                    }
-//                }else{
-//                    throw new MyTaskException("部门领导未找到");
-//                }
-//            }else if(task!=null && "lastnodeleader".equalsIgnoreCase(task.getAssignee())){
-//                User currentUser = SecurityUtils.getCurrentUserObject();
-//                String assignee = KiteApiCallUtils.getUpLeader(currentUser.getId());
-//                if(StringUtils.isNotEmpty(assignee)){
-//                    if(assignee.contains("-1")){
-//                        throw new MyTaskException("上级领导未找到");
-//                    }else{
-//                        taskService.setAssignee(task.getId(),assignee);
-//                        sendMessage(task);
-//                    }
-//                }else{
-//                    throw new MyTaskException("上级领导未找到");
-//                }
-//            }
             taskService.setAssignee(task.getId(),assignee);
             sendMessage(task);
         }
@@ -72,8 +34,8 @@ public class TaskAssigneeSetUtils {
      　* @date 2019/7/19 9:35
      　*/
     private static void sendMessage(Task task){
-        /*  KiteApiCallUtils.sendWxMsg(task);
-          KiteApiCallUtils.sendEmail(task);*/
+           // KiteApiCallUtils.sendWxMsg(task);
+          //KiteApiCallUtils.sendEmail(task);
     }
 
 }
