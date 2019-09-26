@@ -61,14 +61,7 @@ public class TaskFormResource {
   public ResultMsg completeMyTaskForm(@PathVariable String taskId, @RequestBody CompleteFormRepresentation completeTaskFormRepresentation) {
     ResultMsg msg = new ResultMsg();
     try {
-      Task task = (Task)((TaskQuery)this.taskService.createTaskQuery().taskId(taskId)).singleResult();
-      String executionId = task.getExecutionId();
-      String processInstanceId = task.getProcessInstanceId();
-      String assignment = completeTaskFormRepresentation.getAssignment();
-      String startby = completeTaskFormRepresentation.getStartby();
-      String levelType = completeTaskFormRepresentation.getLevelType();
       taskFormService.completeTaskForm(taskId, completeTaskFormRepresentation);
-     // taskFormService.changeAssignee(executionId,processInstanceId,assignment);
       msg.setErrorCode(0);
       msg.setErrorMsg("执行成功！");
     } catch (Exception e) {
