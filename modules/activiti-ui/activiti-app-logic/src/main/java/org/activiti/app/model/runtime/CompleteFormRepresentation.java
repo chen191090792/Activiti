@@ -24,11 +24,12 @@ public class CompleteFormRepresentation {
   protected String formId;
   protected Map<String, Object> values;
   protected String outcome;
-  private String startby;//流程发起人
+  private String startby;//流程发起人手机号
   private String levelType;//任意人标识
   private String assignment;
   private String assigneeKey;
   private List<String> assigneeList;
+
 
 	public String getLevelType() {
 		return levelType;
