@@ -153,13 +153,13 @@ public class ActivitiTaskFormService implements Serializable {
     }
     FormDefinition formDefinition = formRepositoryService.getFormDefinitionById(completeTaskFormRepresentation.getFormId());
 
-    User currentUser = SecurityUtils.getCurrentUserObject();
+/*    User currentUser = SecurityUtils.getCurrentUserObject();
 
     if (!permissionService.isTaskOwnerOrAssignee(currentUser, taskId)) {
       if (!permissionService.validateIfUserIsInitiatorAndCanCompleteTask(currentUser, task)) {
         throw new NotPermittedException();
       }
-    }
+    }*/
 
     // Extract raw variables and complete the task
     Map<String, Object> variables = formService.getVariablesFromFormSubmission(formDefinition, completeTaskFormRepresentation.getValues(),
@@ -197,7 +197,7 @@ public class ActivitiTaskFormService implements Serializable {
           }
             assignee = KiteApiCallUtils.getAssignee(task.getTaskDefinitionKey(),processInstance.getProcessDefinitionVersion(),str);
 
-          if(currentUser.getId().equals(assignee) || processInstance.getStartUserId().equals(assignee) || checkBeforeExamine(processInstanceId,assignee)){
+          if(StringUtils.isNotEmpty(assignee) && (currentUser.getId().equals(assignee) || assignee.equals(startBy) || checkBeforeExamine(processInstanceId,assignee))){
             FormDefinition form = this.getTaskForm(task.getId());
             CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
             completeFormRepresentation.setFormId(form.getId());

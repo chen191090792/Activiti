@@ -46,6 +46,7 @@ import org.activiti.engine.task.Task;
 import org.activiti.form.api.FormRepositoryService;
 import org.activiti.form.api.FormService;
 import org.activiti.form.model.FormDefinition;
+import org.activiti.form.model.FormField;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -64,10 +65,10 @@ public abstract class AbstractProcessInstancesResource {
 
   @Autowired
   protected HistoryService historyService;
-  
+
   @Autowired
   protected FormRepositoryService formRepositoryService;
-  
+
   @Autowired
   protected FormService formService;
 
@@ -89,12 +90,11 @@ public abstract class AbstractProcessInstancesResource {
   @Autowired
   private ActivitiTaskFormService activitiTaskFormService;
 
-
   public ProcessInstanceRepresentation startNewProcessInstance(CreateProcessInstanceRepresentation startRequest) {
     if (StringUtils.isEmpty(startRequest.getProcessDefinitionId())) {
       throw new BadRequestException("Process definition id is required");
     }
-    
+
     FormDefinition formDefinition = null;
     Map<String, Object> variables = null;
 
@@ -124,7 +124,7 @@ public abstract class AbstractProcessInstancesResource {
     if (formDefinition != null) {
       formService.storeSubmittedForm(variables, formDefinition, null, historicProcess.getId());
     }
-    
+
     User user = null;
     if (historicProcess.getStartUserId() != null) {
       CachedUser cachedUser = userCache.getUser(historicProcess.getStartUserId());
@@ -137,18 +137,18 @@ public abstract class AbstractProcessInstancesResource {
     JedisCluster jedisCluser = JedisUtils.getJedisCluser();
     String jump = jedisCluser.get(processDefinition.getId());
     if(StringUtils.equalsIgnoreCase("是",jump)){
-      completeTaskForm(processInstance.getId());
+      completeTaskForm(processInstance.getId(),startRequest.getStartBy());
     }
     return processInstanceRepresentation;
 
   }
-  protected void completeTaskForm(String processInstanceId){
-    User currentUser = SecurityUtils.getCurrentUserObject();
+  protected void completeTaskForm(String processInstanceId,String originator){
     List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
     for(Task task:tasks){
-      if(task.getAssignee().equals(currentUser.getId())){
-        FormDefinition form = activitiTaskFormService.getTaskForm(task.getId());
+      if(task.getAssignee().equals(originator)){
         CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
+        FormDefinition form = activitiTaskFormService.getTaskForm(task.getId());
+        completeFormRepresentation.setStartby(originator);
         completeFormRepresentation.setFormId(form.getId());
         Map<String, Object> values = new HashMap<>();
         values.put("applyResult","同意");

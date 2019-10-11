@@ -14,22 +14,23 @@ import java.util.Arrays;
 import java.util.Map;
 
 /**
- * @author cxh
+ * @author cxhrest/task-forms/
  * @version V1.0
  * @Description: 消息发送类
  * @date 2019/6/18 14:29
  */
 public class KiteApiCallUtils {
-
+    private static String BASE_URL="https://ehr.wxchina.com";
+   // private static String BASE_URL="http://localhost:8080";
     private static RestTemplate restTemplate = new RestTemplate();
-    private static String GET_UPLEADER_URL="http://localhost:8080/api/kite/getUpClassInfo/%s";
-    private static String GET_DEPTLEADER_URL="http://localhost:8080/api/kite/getDeptleaderInfo/%s";
+    private static String GET_UPLEADER_URL=BASE_URL+"/api/kite/getUpClassInfo/%s";
+    private static String GET_DEPTLEADER_URL=BASE_URL+"/api/kite/getDeptleaderInfo/%s";
     private static String MEDIA_TYPE="application/json; charset=UTF-8";
-    private static String WX_MSG_URL="http://localhost:8080/api/kite/notice";
-    private static String EMAIL_MSG_URL="http://localhost:8080/api/kite/email";
-    private static String CHECK_ADMIN_URL="http://localhost:8080/api/kite/checkAdmin/%s";
+    private static String WX_MSG_URL=BASE_URL+"/api/kite/notice";
+    private static String EMAIL_MSG_URL=BASE_URL+"/api/kite/email";
+    private static String CHECK_ADMIN_URL=BASE_URL+"/api/kite/checkAdmin/%s";
 
-    private static String GET_ASSIGNEE_URL="http://localhost:8080/api/kite/getActNodeDetailInfo";
+    private static String GET_ASSIGNEE_URL=BASE_URL+"/api/kite/getActNodeDetailInfo";
 
     public static String getUpLeader(String startById){
         String url = String.format(GET_UPLEADER_URL,startById);
