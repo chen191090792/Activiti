@@ -30,11 +30,13 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         "org.activiti.app.conf",
         "org.activiti.app.repository",
         "org.activiti.app.service",
+		"com.xwkj.workflow.workflow.repository",
+		"com.xwkj.workflow.workflow.service",
         "org.activiti.app.security",
         "org.activiti.app.model.component"})
-@EnableJpaRepositories({ "org.activiti.app.repository" })
+@EnableJpaRepositories({ "org.activiti.app.repository" ,"com.xwkj.workflow.workflow.repository"})
 @EnableTransactionManagement
-@EntityScan({"org.activiti.app.domain"})
+@EntityScan({"org.activiti.app.domain","com.xwkj.workflow.workflow.entity"})
 public class ApplicationConfiguration {
 	
 	/**
