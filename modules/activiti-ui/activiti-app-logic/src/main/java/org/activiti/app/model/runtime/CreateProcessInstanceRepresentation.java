@@ -20,7 +20,7 @@ public class CreateProcessInstanceRepresentation extends CompleteFormRepresentat
     private List<String> assigneeList;
     private String assigneeKey;
     private String assignee;
-    //流程发起人
+    //流程发起人标识
     private String startBy;
 
     public String getStartBy() {

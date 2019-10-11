@@ -147,7 +147,7 @@ public class IdmUsersResource {
     
     @RequestMapping(value = "/rest/admin/users", method = RequestMethod.POST)
     public User createNewUser(@RequestBody CreateUserRepresentation userRepresentation) {
-      validateAdminRole();
+     // validateAdminRole();    注释掉，意图主要是为了普通用户也能往workflow插入数据
       
       if(StringUtils.isBlank(userRepresentation.getId()) ||
           StringUtils.isBlank(userRepresentation.getPassword()) || 
