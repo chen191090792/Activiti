@@ -20,8 +20,8 @@ import java.util.Map;
  * @date 2019/6/18 14:29
  */
 public class KiteApiCallUtils {
-    private static String BASE_URL="https://ehr.wxchina.com";
-   // private static String BASE_URL="http://localhost:8080";
+    //private static String BASE_URL="https://ehr.wxchina.com";
+    private static String BASE_URL="http://localhost:8080";
     private static RestTemplate restTemplate = new RestTemplate();
     private static String GET_UPLEADER_URL=BASE_URL+"/api/kite/getUpClassInfo/%s";
     private static String GET_DEPTLEADER_URL=BASE_URL+"/api/kite/getDeptleaderInfo/%s";
