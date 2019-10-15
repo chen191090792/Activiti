@@ -20,9 +20,11 @@ import java.util.List;
 public class TaskAssigneeSetUtils {
 
     public static void setAssignee(List<Task> tasks , ProcessInstance processInstance, String assignee, TaskService taskService){
-        for(Task task:tasks){
-            taskService.setAssignee(task.getId(),assignee);
-            sendMessage(task);
+        if(StringUtils.isNotEmpty(assignee)){
+            for(Task task:tasks){
+                taskService.setAssignee(task.getId(),assignee);
+                sendMessage(task);
+            }
         }
     }
     /**

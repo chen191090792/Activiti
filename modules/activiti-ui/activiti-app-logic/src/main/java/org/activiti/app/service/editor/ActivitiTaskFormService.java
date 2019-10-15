@@ -172,10 +172,14 @@ public class ActivitiTaskFormService implements Serializable {
 
     taskService.complete(taskId, variables);
     String assignee =completeTaskForm(task.getProcessInstanceId(),completeTaskFormRepresentation.getLevelType(),completeTaskFormRepresentation.getStartby());
+    String  assigneeValue = assignee;
     if(StringUtils.isEmpty(assignee)){
-      assignee = assignment;
+      assigneeValue = assignment;
     }
-    changeAssignee(executionId,processInstanceId,assignee);
+    if(StringUtils.isNotEmpty(assignment) && StringUtils.isNotEmpty(assignee) && !StringUtils.equalsIgnoreCase(assignment,assignee)){
+      assigneeValue =assignee;
+    }
+    changeAssignee(executionId,processInstanceId,assigneeValue);
   }
 
 
@@ -196,7 +200,6 @@ public class ActivitiTaskFormService implements Serializable {
             str = startBy;
           }
             assignee = KiteApiCallUtils.getAssignee(task.getTaskDefinitionKey(),processInstance.getProcessDefinitionVersion(),str);
-
           if(StringUtils.isNotEmpty(assignee) && (currentUser.getId().equals(assignee) || assignee.equals(startBy) || checkBeforeExamine(processInstanceId,assignee))){
             FormDefinition form = this.getTaskForm(task.getId());
             CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
@@ -345,8 +348,10 @@ public class ActivitiTaskFormService implements Serializable {
   @Transactional
   public void changeAssignee(String executionId, String processId,String assignment) {
     ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processId).singleResult();
-    List<Task> tasks = taskService.createTaskQuery().executionId(executionId).processInstanceId(processId).listPage(0,100000);
-    TaskAssigneeSetUtils.setAssignee(tasks,processInstance,assignment,taskService);
+    if(processInstance!=null){
+      List<Task> tasks = taskService.createTaskQuery().processInstanceId(processId).listPage(0,100000);
+      TaskAssigneeSetUtils.setAssignee(tasks,processInstance,assignment,taskService);
+    }
   }
 
 
