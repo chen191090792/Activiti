@@ -379,6 +379,15 @@ public class UserTaskJsonConverter extends BaseBpmnJsonConverter implements Form
               multiInstanceObject.setElementVariable("assignee"+resourceId+"");
               task.setLoopCharacteristics(multiInstanceObject);
               addExtensionElement("activiti-idm-initiator", String.valueOf(true), task);
+            }else if(idmTypeNode!=null && "jointlysignsingle".equalsIgnoreCase(idmTypeNode.asText())){
+              task.setAssignee("${assignee"+resourceId+"}");
+              MultiInstanceLoopCharacteristics multiInstanceObject = new MultiInstanceLoopCharacteristics();
+              multiInstanceObject.setSequential(false);
+              multiInstanceObject.setLoopCardinality("1");
+              multiInstanceObject.setInputDataItem("${assigneeList"+resourceId+"}");
+              multiInstanceObject.setElementVariable("assignee"+resourceId+"");
+              task.setLoopCharacteristics(multiInstanceObject);
+              addExtensionElement("activiti-idm-initiator", String.valueOf(true), task);
             }else if (idmTypeNode != null && "groups".equalsIgnoreCase(idmTypeNode.asText()) && (idmDefNode.has("candidateGroups") || idmDefNode.has("candidateGroupFields"))) {
               fillCandidateGroups(idmDefNode, canCompleteTaskNode, task);
             }else {
