@@ -23,7 +23,8 @@ public class TaskAssigneeSetUtils {
         if(StringUtils.isNotEmpty(assignee)){
             for(Task task:tasks){
                 taskService.setAssignee(task.getId(),assignee);
-                sendMessage(task);
+                task.setAssignee(assignee);
+                sendMessage(task,processInstance);
             }
         }
     }
@@ -35,8 +36,8 @@ public class TaskAssigneeSetUtils {
      　* @author cxh
      　* @date 2019/7/19 9:35
      　*/
-    private static void sendMessage(Task task){
-           // KiteApiCallUtils.sendWxMsg(task);
+    private static void sendMessage(Task task,ProcessInstance processInstance){
+          KiteApiCallUtils.sendWxMsg(task,processInstance);
           //KiteApiCallUtils.sendEmail(task);
     }
 
