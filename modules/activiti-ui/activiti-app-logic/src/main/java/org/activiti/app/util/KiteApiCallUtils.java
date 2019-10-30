@@ -3,6 +3,7 @@ package org.activiti.app.util;
 import com.google.common.collect.Maps;
 import org.activiti.app.security.SecurityUtils;
 import org.activiti.engine.identity.User;
+import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -20,8 +21,8 @@ import java.util.Map;
  * @date 2019/6/18 14:29
  */
 public class KiteApiCallUtils {
-    //private static String BASE_URL="https://ehr.wxchina.com";
-    private static String BASE_URL="http://localhost:8080";
+    private static String BASE_URL="https://ehr.wxchina.com";
+    //private static String BASE_URL="http://localhost:8080";
     private static RestTemplate restTemplate = new RestTemplate();
     private static String GET_UPLEADER_URL=BASE_URL+"/api/kite/getUpClassInfo/%s";
     private static String GET_DEPTLEADER_URL=BASE_URL+"/api/kite/getDeptleaderInfo/%s";
@@ -54,24 +55,27 @@ public class KiteApiCallUtils {
         return  result.getBody();
     }
 
-    public static String sendWxMsg(Task task){
-        HttpEntity entity = getHttpEntity(task);
+    public static String sendWxMsg(Task task,ProcessInstance processInstance){
+        HttpEntity entity = getHttpEntity(task,processInstance);
         String result = restTemplate.postForObject(WX_MSG_URL, entity, String.class);
         return  result;
     }
 
     public static String sendEmail(Task task){
-        HttpEntity entity = getHttpEntity(task);
+        HttpEntity entity = getHttpEntity(task,null);
         String result = restTemplate.postForObject(EMAIL_MSG_URL, entity, String.class);
         return  result;
     }
-    public static HttpEntity getHttpEntity(Task task) {
+    public static HttpEntity getHttpEntity(Task task,ProcessInstance processInstance) {
         User currentUser = SecurityUtils.getCurrentUserObject();
         JsonUtils utils = new JsonUtils();
         Map<String,Object> data = Maps.newConcurrentMap();
         data.put("taskId",task.getName());
-        data.put("userId",currentUser.getId());
+        data.put("userId",task.getAssignee());
         data.put("taskName",task.getName());
+        if(processInstance!=null){
+            data.put("processName",processInstance.getName());
+        }
         String dataJson = utils.object2Json(data);
         HttpHeaders headers = new HttpHeaders();
         MediaType type = MediaType.parseMediaType(MEDIA_TYPE);
