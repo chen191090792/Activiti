@@ -138,31 +138,32 @@ public abstract class AbstractProcessInstanceResource {
 
     return getStartFormDefinition(processInstance.getProcessDefinitionId(), processDefinition, processInstance.getId());
   }
+  //flag确定admin还是普通用户
+  public void deleteProcessInstance(String processInstanceId,String flag) {
 
-  public void deleteProcessInstance(String processInstanceId) {
-
-    User currentUser = SecurityUtils.getCurrentUserObject();
-
-    HistoricProcessInstance processInstance = historyService.createHistoricProcessInstanceQuery()
-        .processInstanceId(processInstanceId)
-        .startedBy(String.valueOf(currentUser.getId())) // Permission
-        .singleResult();
-
-    if (processInstance == null) {
-      throw new NotFoundException("Process with id: " + processInstanceId + " does not exist or is not started by this user");
-    }
-
-    if (processInstance.getEndTime() != null) {
-      // Check if a hard delete of process instance is allowed
-      if (!permissionService.canDeleteProcessInstance(currentUser, processInstance)) {
-        throw new NotFoundException("Process with id: " + processInstanceId + " is already completed and can't be deleted");
-      }
-
-      // Delete cascade behavior in separate service to share a single transaction for all nested service-calls
-      processInstanceService.deleteProcessInstance(processInstanceId);
-
-    } else {
+    if("admin".equals(flag)){
       runtimeService.deleteProcessInstance(processInstanceId, "Cancelled by " + SecurityUtils.getCurrentUserId());
+    }else{
+          User currentUser = SecurityUtils.getCurrentUserObject();
+          HistoricProcessInstance processInstance = historyService.createHistoricProcessInstanceQuery()
+                  .processInstanceId(processInstanceId)
+                  .startedBy(String.valueOf(currentUser.getId())) // Permission
+                  .singleResult();
+          if (processInstance == null) {
+            throw new NotFoundException("Process with id: " + processInstanceId + " does not exist or is not started by this user");
+          }
+          if (processInstance.getEndTime() != null) {
+            // Check if a hard delete of process instance is allowed
+                if (!permissionService.canDeleteProcessInstance(currentUser, processInstance)) {
+                  throw new NotFoundException("Process with id: " + processInstanceId + " is already completed and can't be deleted");
+                }
+
+            // Delete cascade behavior in separate service to share a single transaction for all nested service-calls
+                processInstanceService.deleteProcessInstance(processInstanceId);
+
+          } else {
+                runtimeService.deleteProcessInstance(processInstanceId, "Cancelled by " + SecurityUtils.getCurrentUserId());
+          }
     }
   }
   
