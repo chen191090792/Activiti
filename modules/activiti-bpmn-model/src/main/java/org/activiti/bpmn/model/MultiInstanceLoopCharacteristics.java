@@ -23,7 +23,6 @@ public class MultiInstanceLoopCharacteristics extends BaseElement {
   protected String elementVariable;
   protected String elementIndexVariable;
   protected boolean sequential;
-  protected String flag;
 
   public String getInputDataItem() {
     return inputDataItem;
@@ -86,14 +85,6 @@ public class MultiInstanceLoopCharacteristics extends BaseElement {
     setElementVariable(otherLoopCharacteristics.getElementVariable());
     setElementIndexVariable(otherLoopCharacteristics.getElementIndexVariable());
     setSequential(otherLoopCharacteristics.isSequential());
-    setFlag(otherLoopCharacteristics.getFlag());
   }
 
-  public String getFlag() {
-    return flag;
-  }
-
-  public void setFlag(String flag) {
-    this.flag = flag;
-  }
 }
