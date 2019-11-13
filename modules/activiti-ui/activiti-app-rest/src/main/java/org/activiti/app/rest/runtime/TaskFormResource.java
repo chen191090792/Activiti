@@ -76,7 +76,4 @@ public class TaskFormResource {
   public List<ProcessInstanceVariableRepresentation> getProcessInstanceVariables(@PathVariable String taskId) {
     return taskFormService.getProcessInstanceVariables(taskId);
   }
-
-
-
 }

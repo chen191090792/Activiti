@@ -121,6 +121,7 @@ public abstract class AbstractProcessInstanceResource {
     FormDefinition formDefinition = getStartFormDefinition(processInstance.getProcessDefinitionId(), processDefinition, processInstance.getId());
     if (formDefinition != null) {
       processInstanceResult.setStartFormDefined(true);
+      //processInstanceResult.setFlowBelong(formDefinition.getFields().get());
     }
 
     return processInstanceResult;
