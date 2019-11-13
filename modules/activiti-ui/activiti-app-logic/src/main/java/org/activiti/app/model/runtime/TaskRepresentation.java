@@ -63,13 +63,21 @@ public class TaskRepresentation extends AbstractRepresentation {
   protected boolean isMemberOfCandidateUsers;
   //当前任务节点key 自定义
   protected String currentNodeKey;
-
+  protected String flowBelong;//流程所属人
   @JsonDeserialize(contentAs = UserRepresentation.class)
   @JsonInclude(Include.NON_NULL)
   protected List<UserRepresentation> involvedPeople;
 
   // Needed for serialization!
   public TaskRepresentation() {
+  }
+
+  public String getFlowBelong() {
+    return flowBelong;
+  }
+
+  public void setFlowBelong(String flowBelong) {
+    this.flowBelong = flowBelong;
   }
 
   public TaskRepresentation(Task task) {

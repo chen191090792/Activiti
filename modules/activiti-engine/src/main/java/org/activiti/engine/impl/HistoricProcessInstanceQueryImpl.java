@@ -52,6 +52,7 @@ public class HistoricProcessInstanceQueryImpl extends AbstractVariableQueryImpl<
   protected boolean deleted;
   protected boolean notDeleted;
   protected String startedBy;
+  protected String flowBelong;//流程属于谁
   protected String superProcessInstanceId;
   protected boolean excludeSubprocesses;
   protected List<String> processDefinitionKeyIn;
@@ -243,7 +244,14 @@ public class HistoricProcessInstanceQueryImpl extends AbstractVariableQueryImpl<
     }
     return this;
   }
-
+  public HistoricProcessInstanceQuery flowBelong(String flowBelong) {
+    if (inOrStatement) {
+      this.currentOrQueryObject.flowBelong = flowBelong;
+    } else {
+      this.flowBelong = flowBelong;
+    }
+    return this;
+  }
   public HistoricProcessInstanceQuery processDefinitionKeyNotIn(List<String> processDefinitionKeys) {
     if (inOrStatement) {
       this.currentOrQueryObject.processKeyNotIn = processDefinitionKeys;
@@ -690,6 +698,10 @@ public class HistoricProcessInstanceQueryImpl extends AbstractVariableQueryImpl<
 
   public String getStartedBy() {
     return startedBy;
+  }
+
+  public String getFlowBelong() {
+    return flowBelong;
   }
 
   public String getSuperProcessInstanceId() {

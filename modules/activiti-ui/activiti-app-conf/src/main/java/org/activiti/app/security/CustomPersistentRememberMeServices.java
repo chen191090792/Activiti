@@ -239,19 +239,20 @@ public class CustomPersistentRememberMeServices extends AbstractRememberMeServic
       logger.debug("Note: Cookie will not be marked as HttpOnly because you are not using Servlet 3.0 (Cookie#setHttpOnly(boolean) was not found).");
     }
     Set<HostAndPort> nodes = new HashSet<HostAndPort>();
-    nodes.add(new HostAndPort("172.16.0.32", 7000));
-    nodes.add(new HostAndPort("172.16.0.32", 7001));
-    nodes.add(new HostAndPort("172.16.0.32", 7002));
-    nodes.add(new HostAndPort("172.16.0.32", 7003));
-    nodes.add(new HostAndPort("172.16.0.32", 7004));
-    nodes.add(new HostAndPort("172.16.0.32", 7005));
+    nodes.add(new HostAndPort("172.16.0.19", 7000));
+    nodes.add(new HostAndPort("172.16.0.19", 7001));
+    nodes.add(new HostAndPort("172.16.0.19", 7002));
+
+    nodes.add(new HostAndPort("172.16.0.20", 7003));
+    nodes.add(new HostAndPort("172.16.0.20", 7004));
+    nodes.add(new HostAndPort("172.16.0.20", 7005));
     JedisCluster jedis = new JedisCluster(nodes);
     jedis.set(COOKIE_NAME,cookieValue);
     response.addCookie(cookie);
   }
 
   /**
-   * 2019-03-26 cxh 修改
+   * 3232-03-26 cxh 修改
    * @param token
    * @param tokens
    * @param maxAge
@@ -273,12 +274,13 @@ public class CustomPersistentRememberMeServices extends AbstractRememberMeServic
       logger.debug("Note: Cookie will not be marked as HttpOnly because you are not using Servlet 3.0 (Cookie#setHttpOnly(boolean) was not found).");
     }
     Set<HostAndPort> nodes = new HashSet<HostAndPort>();
-    nodes.add(new HostAndPort("172.16.0.32", 7000));
-    nodes.add(new HostAndPort("172.16.0.32", 7001));
-    nodes.add(new HostAndPort("172.16.0.32", 7002));
-    nodes.add(new HostAndPort("172.16.0.32", 7003));
-    nodes.add(new HostAndPort("172.16.0.32", 7004));
-    nodes.add(new HostAndPort("172.16.0.32", 7005));
+    nodes.add(new HostAndPort("172.16.0.19", 7000));
+    nodes.add(new HostAndPort("172.16.0.19", 7001));
+    nodes.add(new HostAndPort("172.16.0.19", 7002));
+
+    nodes.add(new HostAndPort("172.16.0.20", 7003));
+    nodes.add(new HostAndPort("172.16.0.20", 7004));
+    nodes.add(new HostAndPort("172.16.0.20", 7005));
     JedisCluster jedis = new JedisCluster(nodes);
     jedis.set(COOKIE_NAME+"_"+token.getUser(),cookieValue);
     response.addCookie(cookie);

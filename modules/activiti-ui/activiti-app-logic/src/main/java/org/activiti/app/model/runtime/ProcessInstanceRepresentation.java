@@ -37,6 +37,7 @@ public class ProcessInstanceRepresentation extends AbstractRepresentation {
     protected String tenantId;
     protected Date started;
     protected Date ended;
+    protected String flowBelong;
     protected UserRepresentation startedBy;
     protected String processDefinitionName;
     protected String processDefinitionDescription;
@@ -161,6 +162,10 @@ public class ProcessInstanceRepresentation extends AbstractRepresentation {
         this.name = name;
     }
 
+    public void setFlowBelong(String flowBelong) {
+        this.flowBelong = flowBelong;
+    }
+
     public String getProcessDefinitionName() {
         return processDefinitionName;
     }
@@ -227,6 +232,10 @@ public class ProcessInstanceRepresentation extends AbstractRepresentation {
     
     public void setGraphicalNotationDefined(boolean graphicalNotationDefined) {
         this.graphicalNotationDefined = graphicalNotationDefined;
+    }
+
+    public String getFlowBelong() {
+        return flowBelong;
     }
 
     public boolean isStartFormDefined() {

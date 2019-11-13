@@ -39,10 +39,10 @@ public class ProcessInstanceResource extends AbstractProcessInstanceResource {
     return super.getProcessInstanceStartForm(processInstanceId, response);
   }
 
-  @RequestMapping(value = "/rest/process-instances/{processInstanceId}", method = RequestMethod.DELETE)
+  @RequestMapping(value = "/rest/process-instances/{processInstanceId}/{flag}", method = RequestMethod.DELETE)
   @ResponseStatus(value = HttpStatus.OK)
-  public void deleteProcessInstance(@PathVariable String processInstanceId) {
-    super.deleteProcessInstance(processInstanceId);
+  public void deleteProcessInstance(@PathVariable String processInstanceId,@PathVariable String flag) {
+    super.deleteProcessInstance(processInstanceId,flag);
   }
 
 }

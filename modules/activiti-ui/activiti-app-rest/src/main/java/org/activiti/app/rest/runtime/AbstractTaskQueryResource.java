@@ -12,19 +12,9 @@
  */
 package org.activiti.app.rest.runtime;
 
-import java.text.ParseException;
-import java.text.ParsePosition;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.inject.Inject;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.util.ISO8601Utils;
 import org.activiti.app.model.common.ResultListDataRepresentation;
 import org.activiti.app.model.idm.UserRepresentation;
 import org.activiti.app.model.runtime.ProcessInstanceRepresentation;
@@ -36,6 +26,10 @@ import org.activiti.app.service.exception.BadRequestException;
 import org.activiti.app.service.exception.NotFoundException;
 import org.activiti.app.service.runtime.PermissionService;
 import org.activiti.app.util.KiteApiCallUtils;
+import org.activiti.bpmn.model.BpmnModel;
+import org.activiti.bpmn.model.FlowElement;
+import org.activiti.bpmn.model.Process;
+import org.activiti.bpmn.model.StartEvent;
 import org.activiti.editor.language.json.converter.util.CollectionUtils;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
@@ -49,12 +43,16 @@ import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.TaskInfo;
 import org.activiti.engine.task.TaskInfoQueryWrapper;
+import org.activiti.form.api.FormService;
 import org.activiti.form.model.FormDefinition;
+import org.activiti.form.model.FormField;
 import org.apache.commons.lang3.StringUtils;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.util.ISO8601Utils;
+import javax.inject.Inject;
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public abstract class AbstractTaskQueryResource {
 
@@ -64,6 +62,9 @@ public abstract class AbstractTaskQueryResource {
   private static final String SORT_DUE_DESC = "due-desc";
 
   private static final int DEFAULT_PAGE_SIZE = 25;
+
+  @Inject
+  protected FormService formService;
 
   @Inject
   protected RepositoryService repositoryService;
@@ -309,12 +310,39 @@ public abstract class AbstractTaskQueryResource {
             representation.setStartedBy(getStartedBy(representation.getProcessInstanceId()));
           }
         }
+        //插入流程启始人
+        FormDefinition processInstanceStartForm = getProcessInstanceStartForm(representation.getProcessInstanceId());
+        List<FormField> formFields = processInstanceStartForm.getFields();
+        Optional<Object> optional =  formFields.stream().filter(v->v.getId().equals("originator")).map(v->v.getValue()).findFirst();
+        representation.setFlowBelong(optional.get().toString());
         result.add(representation);
       }
     }
     return result;
   }
-
+  public FormDefinition getProcessInstanceStartForm(String processInstanceId) {
+    HistoricProcessInstance processInstance = (HistoricProcessInstance)this.historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+    boolean admin = KiteApiCallUtils.checkAdmin();
+    if (!admin && !this.permissionService.hasReadPermissionOnProcessInstance(SecurityUtils.getCurrentUserObject(), processInstance, processInstanceId)) {
+      throw new NotFoundException("Process with id: " + processInstanceId + " does not exist or is not available for this user");
+    } else {
+      ProcessDefinitionEntity processDefinition = (ProcessDefinitionEntity)this.repositoryService.getProcessDefinition(processInstance.getProcessDefinitionId());
+      return this.getStartFormDefinition(processInstance.getProcessDefinitionId(), processDefinition, processInstance.getId());
+    }
+  }
+  protected FormDefinition getStartFormDefinition(String processDefinitionId, ProcessDefinitionEntity processDefinition, String processInstanceId) {
+    FormDefinition formDefinition = null;
+    BpmnModel bpmnModel = this.repositoryService.getBpmnModel(processDefinitionId);
+    Process process = bpmnModel.getProcessById(processDefinition.getKey());
+    FlowElement startElement = process.getInitialFlowElement();
+    if (startElement instanceof StartEvent) {
+      StartEvent startEvent = (StartEvent)startElement;
+      if (StringUtils.isNotEmpty(startEvent.getFormKey())) {
+        formDefinition = this.formService.getCompletedTaskFormDefinitionByKeyAndParentDeploymentId(startEvent.getFormKey(), processDefinition.getDeploymentId(), (String)null, processInstanceId, (Map)null, processDefinition.getTenantId());
+      }
+    }
+    return formDefinition;
+  }
   public UserRepresentation getStartedBy(String processInstanceId){
 
     UserRepresentation userRepresentation = null;
