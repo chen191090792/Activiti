@@ -24,7 +24,6 @@ import org.activiti.app.service.api.UserCache.CachedUser;
 import org.activiti.app.service.exception.BadRequestException;
 import org.activiti.app.service.exception.NotPermittedException;
 import org.activiti.app.service.runtime.PermissionService;
-import org.activiti.app.service.util.JedisUtils;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FlowNode;
 import org.activiti.bpmn.model.SequenceFlow;
@@ -41,6 +40,7 @@ import org.activiti.image.ProcessDiagramGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import redis.clients.jedis.JedisCluster;
 import sun.misc.BASE64Encoder;
@@ -69,6 +69,8 @@ public class HistoricTaskQueryResource {
   private ProcessEngineConfiguration processEngineConfiguration;
   @Inject
   private RepositoryService repositoryService;
+  @Autowired
+  private JedisCluster  jedisCluster;
 
   private Logger logger = LoggerFactory.getLogger(HistoricTaskQueryResource.class);
 
@@ -309,8 +311,7 @@ public class HistoricTaskQueryResource {
       }
       BASE64Encoder encoder = new BASE64Encoder();
       String imageEncoder = encoder.encode(outputStream.toByteArray());
-      JedisCluster jedisCluser = JedisUtils.getJedisCluser();
-      jedisCluser.set(processInstanceId,imageEncoder);
+      jedisCluster.set(processInstanceId,imageEncoder);
     } catch (Exception e) {
       logger.error("processInstanceId" + processInstanceId + "生成流程图失败，原因：" + e.getMessage(), e);
     }

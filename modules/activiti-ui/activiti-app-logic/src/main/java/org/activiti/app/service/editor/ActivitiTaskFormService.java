@@ -29,7 +29,6 @@ import org.activiti.app.service.exception.MyTaskException;
 import org.activiti.app.service.exception.NotFoundException;
 import org.activiti.app.service.exception.NotPermittedException;
 import org.activiti.app.service.runtime.PermissionService;
-import org.activiti.app.service.util.JedisUtils;
 import org.activiti.app.service.util.TaskAssigneeSetUtils;
 import org.activiti.app.util.KiteApiCallUtils;
 import org.activiti.editor.language.json.converter.util.CollectionUtils;
@@ -97,6 +96,9 @@ public class ActivitiTaskFormService implements Serializable {
   protected UserCache userCache;
 
   private RestTemplate restTemplate = new RestTemplate();
+
+  @Autowired
+  private JedisCluster  jedisCluster;
 
   public FormDefinition getTaskForm(String taskId) {
     HistoricTaskInstance task = permissionService.validateReadPermissionOnTask(SecurityUtils.getCurrentUserObject(), taskId);
@@ -191,8 +193,7 @@ public class ActivitiTaskFormService implements Serializable {
     List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
     ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
     if(processInstance!=null){//判断processInstance不为null执行
-      JedisCluster jedisCluser = JedisUtils.getJedisCluser();
-      String jump = jedisCluser.get(processInstance.getProcessDefinitionId());
+      String jump = jedisCluster.get(processInstance.getProcessDefinitionId());
       if(StringUtils.equalsIgnoreCase("是",jump)){
         for(Task task:tasks){
           String str = currentUser.getId();

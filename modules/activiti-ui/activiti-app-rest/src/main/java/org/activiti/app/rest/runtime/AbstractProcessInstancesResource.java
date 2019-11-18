@@ -30,7 +30,6 @@ import org.activiti.app.service.runtime.ActivitiService;
 import org.activiti.app.service.runtime.PermissionService;
 import org.activiti.app.service.runtime.ProcessInstanceService;
 import org.activiti.app.service.runtime.RelatedContentService;
-import org.activiti.app.service.util.JedisUtils;
 import org.activiti.bpmn.model.*;
 import org.activiti.bpmn.model.Process;
 import org.activiti.engine.HistoryService;
@@ -89,6 +88,8 @@ public abstract class AbstractProcessInstancesResource {
   protected ObjectMapper objectMapper;
   @Autowired
   private ActivitiTaskFormService activitiTaskFormService;
+  @Autowired
+  private JedisCluster  jedisCluster;
 
   public ProcessInstanceRepresentation startNewProcessInstance(CreateProcessInstanceRepresentation startRequest) {
     if (StringUtils.isEmpty(startRequest.getProcessDefinitionId())) {
@@ -134,8 +135,7 @@ public abstract class AbstractProcessInstancesResource {
     }
     ProcessInstanceRepresentation processInstanceRepresentation = new ProcessInstanceRepresentation(historicProcess, processDefinition, ((ProcessDefinitionEntity) processDefinition).isGraphicalNotationDefined(), user);
 
-    JedisCluster jedisCluser = JedisUtils.getJedisCluser();
-    String jump = jedisCluser.get(processDefinition.getId());
+    String jump = jedisCluster.get(processDefinition.getId());
     if(StringUtils.equalsIgnoreCase("是",jump)){
       completeTaskForm(processInstance.getId(),startRequest.getStartBy());
     }

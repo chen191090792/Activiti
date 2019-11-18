@@ -12,18 +12,7 @@
  */
 package org.activiti.app.security;
 
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.activiti.app.domain.idm.PersistentToken;
-import org.activiti.app.security.ActivitiAppUser;
 import org.activiti.app.service.idm.PersistentTokenService;
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.identity.User;
@@ -41,8 +30,14 @@ import org.springframework.security.web.authentication.rememberme.RememberMeAuth
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ReflectionUtils;
-import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Date;
 
 /**
  * Custom implementation of Spring Security's RememberMeServices.
@@ -81,6 +76,8 @@ public class CustomPersistentRememberMeServices extends AbstractRememberMeServic
 
   @Autowired
   private IdentityService identityService;
+  @Autowired
+  private JedisCluster  jedisCluster;
 
   private final int tokenMaxAgeInSeconds;
   private final long tokenMaxAgeInMilliseconds;
@@ -238,16 +235,7 @@ public class CustomPersistentRememberMeServices extends AbstractRememberMeServic
     } else if (logger.isDebugEnabled()) {
       logger.debug("Note: Cookie will not be marked as HttpOnly because you are not using Servlet 3.0 (Cookie#setHttpOnly(boolean) was not found).");
     }
-    Set<HostAndPort> nodes = new HashSet<HostAndPort>();
-    nodes.add(new HostAndPort("172.16.0.19", 7000));
-    nodes.add(new HostAndPort("172.16.0.19", 7001));
-    nodes.add(new HostAndPort("172.16.0.19", 7002));
-
-    nodes.add(new HostAndPort("172.16.0.20", 7003));
-    nodes.add(new HostAndPort("172.16.0.20", 7004));
-    nodes.add(new HostAndPort("172.16.0.20", 7005));
-    JedisCluster jedis = new JedisCluster(nodes);
-    jedis.set(COOKIE_NAME,cookieValue);
+    jedisCluster.set(COOKIE_NAME,cookieValue);
     response.addCookie(cookie);
   }
 
@@ -273,16 +261,7 @@ public class CustomPersistentRememberMeServices extends AbstractRememberMeServic
     } else if (logger.isDebugEnabled()) {
       logger.debug("Note: Cookie will not be marked as HttpOnly because you are not using Servlet 3.0 (Cookie#setHttpOnly(boolean) was not found).");
     }
-    Set<HostAndPort> nodes = new HashSet<HostAndPort>();
-    nodes.add(new HostAndPort("172.16.0.19", 7000));
-    nodes.add(new HostAndPort("172.16.0.19", 7001));
-    nodes.add(new HostAndPort("172.16.0.19", 7002));
-
-    nodes.add(new HostAndPort("172.16.0.20", 7003));
-    nodes.add(new HostAndPort("172.16.0.20", 7004));
-    nodes.add(new HostAndPort("172.16.0.20", 7005));
-    JedisCluster jedis = new JedisCluster(nodes);
-    jedis.set(COOKIE_NAME+"_"+token.getUser(),cookieValue);
+    jedisCluster.set(COOKIE_NAME+"_"+token.getUser(),cookieValue);
     response.addCookie(cookie);
   }
 

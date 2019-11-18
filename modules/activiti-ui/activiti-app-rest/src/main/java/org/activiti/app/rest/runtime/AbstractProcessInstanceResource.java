@@ -14,10 +14,12 @@ package org.activiti.app.rest.runtime;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.activiti.app.model.runtime.CompleteFormRepresentation;
 import org.activiti.app.model.runtime.ProcessInstanceRepresentation;
 import org.activiti.app.security.SecurityUtils;
 import org.activiti.app.service.api.UserCache;
 import org.activiti.app.service.api.UserCache.CachedUser;
+import org.activiti.app.service.editor.ActivitiTaskFormService;
 import org.activiti.app.service.exception.NotFoundException;
 import org.activiti.app.service.runtime.PermissionService;
 import org.activiti.app.service.runtime.ProcessInstanceService;
@@ -29,9 +31,11 @@ import org.activiti.bpmn.model.StartEvent;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.identity.User;
 import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
+import org.activiti.engine.task.Task;
 import org.activiti.form.api.FormRepositoryService;
 import org.activiti.form.api.FormService;
 import org.activiti.form.model.FormDefinition;
@@ -39,6 +43,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public abstract class AbstractProcessInstanceResource {
 
@@ -68,6 +77,10 @@ public abstract class AbstractProcessInstanceResource {
 
   @Autowired
   protected UserCache userCache;
+  @Autowired
+  protected TaskService taskService;
+  @Autowired
+  ActivitiTaskFormService activitiTaskFormService;
 
   public ProcessInstanceRepresentation getProcessInstance(String processInstanceId, HttpServletResponse response) {
 
@@ -143,7 +156,18 @@ public abstract class AbstractProcessInstanceResource {
   public void deleteProcessInstance(String processInstanceId,String flag) {
 
     if("admin".equals(flag)){
-      runtimeService.deleteProcessInstance(processInstanceId, "Cancelled by " + SecurityUtils.getCurrentUserId());
+      List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
+      for(Task task:tasks){
+        FormDefinition form = activitiTaskFormService.getTaskForm(task.getId());
+        CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
+        completeFormRepresentation.setFormId(form.getId());
+        Map<String, Object> values = new HashMap<>();
+        values.put("applyResult","不同意");
+        values.put("applyRemarks","管理员终止流程");
+        completeFormRepresentation.setValues(values);
+        myCompleteTaskForm(task.getId(),completeFormRepresentation);
+      }
+     // runtimeService.deleteProcessInstance(processInstanceId, "Cancelled by " + SecurityUtils.getCurrentUserId());
     }else{
           User currentUser = SecurityUtils.getCurrentUserObject();
           HistoricProcessInstance processInstance = historyService.createHistoricProcessInstanceQuery()
@@ -167,7 +191,23 @@ public abstract class AbstractProcessInstanceResource {
           }
     }
   }
-  
+
+
+  @Transactional
+  public void myCompleteTaskForm(String taskId, CompleteFormRepresentation completeTaskFormRepresentation) {
+    // Get the form definition
+    Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
+    if (task == null) {
+      throw new NotFoundException("Task not found with id: " + taskId);
+    }
+    FormDefinition formDefinition = formRepositoryService.getFormDefinitionById(completeTaskFormRepresentation.getFormId());
+    // Extract raw variables and complete the task
+    Map<String, Object> variables = formService.getVariablesFromFormSubmission(formDefinition, completeTaskFormRepresentation.getValues(),
+            completeTaskFormRepresentation.getOutcome());
+    formService.storeSubmittedForm(variables, formDefinition, task.getId(), task.getProcessInstanceId());
+    taskService.complete(taskId, variables);
+  }
+
   protected FormDefinition getStartFormDefinition(String processDefinitionId, ProcessDefinitionEntity processDefinition, String processInstanceId) {
     FormDefinition formDefinition = null;
     BpmnModel bpmnModel = repositoryService.getBpmnModel(processDefinitionId);

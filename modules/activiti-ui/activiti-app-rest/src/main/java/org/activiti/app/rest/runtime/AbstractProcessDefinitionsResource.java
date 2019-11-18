@@ -22,9 +22,7 @@ import org.activiti.app.domain.editor.Model;
 import org.activiti.app.model.common.ResultListDataRepresentation;
 import org.activiti.app.model.runtime.ProcessDefinitionRepresentation;
 import org.activiti.app.service.api.ModelService;
-import org.activiti.app.service.editor.ModelServiceImpl;
 import org.activiti.app.service.runtime.PermissionService;
-import org.activiti.app.service.util.JedisUtils;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.StartEvent;
 import org.activiti.editor.language.json.converter.util.CollectionUtils;
@@ -50,6 +48,9 @@ public abstract class AbstractProcessDefinitionsResource {
   protected PermissionService permissionService;
   @Autowired
   private ModelService modelService;
+  @Autowired
+  private JedisCluster  jedisCluster;
+
 
   public ResultListDataRepresentation getProcessDefinitions(Boolean latest, String deploymentKey) {
 
@@ -88,7 +89,6 @@ public abstract class AbstractProcessDefinitionsResource {
   protected List<ProcessDefinitionRepresentation> convertDefinitionList(List<ProcessDefinition> definitions) {
     Map<String, Boolean> startFormMap = new HashMap<String, Boolean>();
     List<ProcessDefinitionRepresentation> result = new ArrayList<ProcessDefinitionRepresentation>();
-      JedisCluster jedisCluser = JedisUtils.getJedisCluser();
     if (CollectionUtils.isNotEmpty(definitions)) {
       for (ProcessDefinition processDefinition : definitions) {
         if (startFormMap.containsKey(processDefinition.getId()) == false) {
@@ -126,7 +126,7 @@ public abstract class AbstractProcessDefinitionsResource {
         ProcessDefinitionRepresentation rep = new ProcessDefinitionRepresentation(processDefinition);
         rep.setProcessType(processType);
         rep.setJump(jump);
-        jedisCluser.set(processDefinition.getId(),jump);
+        jedisCluster.set(processDefinition.getId(),jump);
         rep.setHasStartForm(startFormMap.get(processDefinition.getId()));
         result.add(rep);
       }
