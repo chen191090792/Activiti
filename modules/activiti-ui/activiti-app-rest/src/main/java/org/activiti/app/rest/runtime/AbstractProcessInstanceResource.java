@@ -39,6 +39,7 @@ import org.activiti.engine.task.Task;
 import org.activiti.form.api.FormRepositoryService;
 import org.activiti.form.api.FormService;
 import org.activiti.form.model.FormDefinition;
+import org.activiti.form.model.FormField;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,17 +157,7 @@ public abstract class AbstractProcessInstanceResource {
   public void deleteProcessInstance(String processInstanceId,String flag) {
 
     if("admin".equals(flag)){
-      List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
-      for(Task task:tasks){
-        FormDefinition form = activitiTaskFormService.getTaskForm(task.getId());
-        CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
-        completeFormRepresentation.setFormId(form.getId());
-        Map<String, Object> values = new HashMap<>();
-        values.put("applyResult","不同意");
-        values.put("applyRemarks","管理员终止流程");
-        completeFormRepresentation.setValues(values);
-        myCompleteTaskForm(task.getId(),completeFormRepresentation);
-      }
+        completeForm(processInstanceId,"管理员终止流程");
      // runtimeService.deleteProcessInstance(processInstanceId, "Cancelled by " + SecurityUtils.getCurrentUserId());
     }else{
           User currentUser = SecurityUtils.getCurrentUserObject();
@@ -187,11 +178,36 @@ public abstract class AbstractProcessInstanceResource {
                 processInstanceService.deleteProcessInstance(processInstanceId);
 
           } else {
-                runtimeService.deleteProcessInstance(processInstanceId, "Cancelled by " + SecurityUtils.getCurrentUserId());
+            completeForm(processInstanceId,"流程发起人终止流程");
           }
     }
   }
 
+  public void completeForm(String processInstanceId,String remarks){
+    List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).listPage(0, 1000000);
+    for(Task task:tasks){
+      FormDefinition form = activitiTaskFormService.getTaskForm(task.getId());
+      if(form!=null){
+        CompleteFormRepresentation completeFormRepresentation  = new CompleteFormRepresentation();
+        completeFormRepresentation.setFormId(form.getId());
+        Map<String, Object> values = new HashMap<>();
+        List<FormField> fields = form.getFields();
+        for(FormField formField:fields){
+          if(formField.isRequired()){
+            values.put(formField.getId(),0);
+          }
+          if("applyResult".equals(formField.getId())){
+            values.put("applyResult","不同意");
+          }
+          if("applyRemarks".equals(formField.getId())){
+            values.put("applyRemarks",remarks);
+          }
+        }
+        completeFormRepresentation.setValues(values);
+        myCompleteTaskForm(task.getId(),completeFormRepresentation);
+      }
+    }
+  }
 
   @Transactional
   public void myCompleteTaskForm(String taskId, CompleteFormRepresentation completeTaskFormRepresentation) {
